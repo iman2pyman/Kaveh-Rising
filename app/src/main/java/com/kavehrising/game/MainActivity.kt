@@ -496,6 +496,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         attackEffectHit = false
         dodgeCooldownUntil = 0L
         dodgeActiveUntil = 0L
+        // Each fresh attempt/chapter starts with its healing potion available.
+        potionUsed = false
+        prefs.edit().putBoolean("potion_used", false).apply()
         lastEnemyStep = System.currentTimeMillis()
         gameOver = false
         won = false
