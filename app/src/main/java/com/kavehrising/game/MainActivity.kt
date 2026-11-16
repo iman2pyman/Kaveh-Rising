@@ -33,6 +33,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var dodgeActiveUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
     private var storyIntro = true
+    private var paused = false
     private var gameOver = false
     private var won = false
     private var message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
@@ -48,10 +49,11 @@ private class KavehGameView(private val host: Activity) : View(host) {
         drawEnemy(canvas, w * enemyX, h * .69f)
         drawControls(canvas, w, h)
 
-        if (!gameOver && !won) {
+        if (!gameOver && !won && !paused) {
             updateEnemy()
             postInvalidateDelayed(70)
         }
+        if (paused) drawOverlay(canvas, w, h, "بازی متوقف شد", "برای ادامه، صفحه را لمس کن")
         if (gameOver) drawOverlay(canvas, w, h, "کاوه شکست خورد", "برای تلاش دوباره لمس کن")
         if (won) {
             val next = if (chapterIndex < ChapterData.chapters.lastIndex)
@@ -107,6 +109,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         canvas.drawText(chapter.subtitleFa, w / 2, h * .12f, paint)
         paint.textSize = min(w, h) * .029f
         canvas.drawText("فصل ${chapterIndex + 1} از ${ChapterData.chapters.size}", w / 2, h * .16f, paint)
+        drawButton(canvas, RectF(w * .83f, h * .035f, w * .97f, h * .105f), "Ⅱ")
 
         // Compact health bars make combat status readable at a glance.
         val barWidth = w * .30f
@@ -225,6 +228,16 @@ private class KavehGameView(private val host: Activity) : View(host) {
         if (event.action != MotionEvent.ACTION_DOWN) return true
         val w = width.toFloat()
         val h = height.toFloat()
+        if (paused) {
+            paused = false
+            invalidate()
+            return true
+        }
+        if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
+            paused = true
+            invalidate()
+            return true
+        }
         if (storyIntro && !gameOver && !won) {
             storyIntro = false
             invalidate()
@@ -295,6 +308,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         lastEnemyStep = System.currentTimeMillis()
         gameOver = false
         won = false
+        paused = false
         message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
         messageUntil = System.currentTimeMillis() + 3500L
     }
