@@ -26,6 +26,11 @@ namespace KavehRising
 
         void Awake()
         {
+            if (openingLines == null || openingLines.Length == 0)
+                openingLines = new[] {
+                    new DialogueLine { speaker = "راوی", text = "در روزگار فرمانروایی ضحاک، سایه ستم بر ایران افتاده بود.", subtitleSeconds = 4f },
+                    new DialogueLine { speaker = "کاوه", text = "تا جان در بدن دارم، در برابر بیداد خاموش نمی‌مانم!", subtitleSeconds = 4f }
+                };
             voiceSource = gameObject.AddComponent<AudioSource>();
             voiceSource.playOnAwake = false;
             voiceSource.spatialBlend = 0f;

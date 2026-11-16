@@ -64,7 +64,9 @@ namespace KavehRising
             IsPaused=false;IsGameOver=false;IsVictory=false;if(resetHealth)Health=5;
             HasPotion=true;EnemyHealth=Current.enemyHealth;
             if(Player!=null)Destroy(Player.gameObject);if(Enemy!=null)Destroy(Enemy.gameObject);
-            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);\n            var dialogue=FindObjectOfType<VoiceDialogueDirector>(); if(dialogue)dialogue.PlayChapter(Chapter);\n            SaveProgress();
+            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);
+            var dialogue=FindObjectOfType<VoiceDialogueDirector>(); if(dialogue)dialogue.PlayChapter(Chapter);
+            SaveProgress();
         }
         void SaveProgress(){PlayerPrefs.SetInt("kr_chapter",Chapter);PlayerPrefs.SetInt("kr_unlocked",UnlockedChapter);PlayerPrefs.SetInt("kr_score",Score);PlayerPrefs.Save();}
         void LoadProgress(){Chapter=Mathf.Clamp(PlayerPrefs.GetInt("kr_chapter",0),0,Chapters.Length-1);UnlockedChapter=Mathf.Clamp(PlayerPrefs.GetInt("kr_unlocked",0),0,Chapters.Length-1);Chapter=Mathf.Min(Chapter,UnlockedChapter);Score=PlayerPrefs.GetInt("kr_score",0);}
