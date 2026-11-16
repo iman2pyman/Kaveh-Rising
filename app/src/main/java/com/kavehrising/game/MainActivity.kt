@@ -54,6 +54,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var attackEffectHit = false
     private var dodgeCooldownUntil = 0L
     private var dodgeActiveUntil = 0L
+    private var playerDamageFlashUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
     private var storyIntro = prefs.getBoolean("story_intro", true)
     private var paused = false
@@ -98,6 +99,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         drawEnemy(canvas, w * enemyX, h * .69f)
         drawAttackEffect(canvas, w, h)
         drawHeavyAttackEffect(canvas, w, h)
+        drawDamageFlash(canvas, w, h)
         drawControls(canvas, w, h)
 
         if (!gameOver && !won && !paused) {
@@ -211,6 +213,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 val damage = if (specialStrike) 2 else 1
                 val previousHealth = health
                 health = (health - damage).coerceAtLeast(0)
+                playerDamageFlashUntil = now + 260L
                 message = if (specialStrike) "حمله ویژه دشمن! دو واحد سلامتی از دست دادی" else "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
                 messageUntil = now + 1500L
                 if (health <= 0) {
@@ -342,6 +345,23 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.strokeWidth = min(w, h) * .018f
         paint.color = if (heavyAttackEffectHit) Color.rgb(255, 225, 105) else Color.rgb(185, 145, 105)
         canvas.drawCircle(centerX, centerY, radius, paint)
+        paint.style = Paint.Style.FILL
+    }
+
+    private fun drawDamageFlash(canvas: Canvas, w: Float, h: Float) {
+        val remaining = playerDamageFlashUntil - System.currentTimeMillis()
+        if (remaining <= 0L) return
+        val alpha = (remaining * 105L / 260L).toInt().coerceIn(0, 105)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = min(w, h) * .035f
+        paint.color = Color.argb(alpha, 225, 35, 25)
+        canvas.drawRect(
+            paint.strokeWidth / 2f,
+            paint.strokeWidth / 2f,
+            w - paint.strokeWidth / 2f,
+            h - paint.strokeWidth / 2f,
+            paint
+        )
         paint.style = Paint.Style.FILL
     }
 
