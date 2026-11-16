@@ -1,19 +1,30 @@
-# KAVEH RISING — Godot edition
+# KAVEH RISING — Godot 4.7.2
 
-This is the new lightweight Godot 4.7.2 project. The original Unity project remains intact in `../UnityProject` as a backup.
+نسخه Godot پروژه اصلی توسعه اندروید است. پروژه Unity در مسیر `../UnityProject` به‌عنوان آرشیو و منبع دارایی‌ها نگهداری شده است.
 
-## First playable milestone
-- Procedural low-poly 3D arena (no external downloads or heavyweight starter assets).
-- Kaveh player capsule and a Zahhak guard enemy.
-- Third-person follow camera, basic chase AI, health and melee attack.
-- Persian HUD and on-screen touch buttons; keyboard controls are included for desktop testing.
-- First chapter placeholder: «آتش آهنگری».
+## محتوای پیاده‌سازی‌شده
+- کمپین داستانی فارسی با ۱۰ فصل و دقیقاً ۱۷ موج نبرد.
+- شخصیت سه‌بعدی کاوه و دشمنان با مدل‌های rigged واردشده از FBX.
+- پنج کتابخانه انیمیشن Rig_Medium شامل حرکت، دویدن، جاخالی، ضربه، دفاع، تعامل، آسیب و مرگ.
+- دشمنان سرباز، فرمانده زبده، جانور افسانه‌ای و باس نهایی ضحاک با دو سر مار.
+- محیط‌های متنوع آهنگری، روستا، کوهستان، سیاه‌چال، دشت، جنگل، دژ و تالار ضحاک.
+- اهداف آزادسازی زندانیان با قفس‌ها و تعامل نزدیک؛ برافراشتن درفش کاویانی.
+- دوربین سوم‌شخص، حرکت لمسی چندجهته، حمله، جاخالی، نوار سلامتی/توان، شمارنده دشمن و سکه.
+- افکت ضربه، جلوه‌های آتش و صداهای محیطی/رزمی. موسیقی متن و صداپیشگی فارسی عمداً به مرحله بعد موکول شده‌اند.
+- ذخیره پیشرفت فصل و ادامه بازی.
 
-## Android
-The repository workflow **Godot Android APK** downloads the official Godot 4.7.2 editor and matching export templates, installs Android SDK packages, validates the project, exports a debug APK and uploads it as a workflow artifact.
+## کنترل‌ها
+- موبایل: کلیدهای جهت‌دار، «ضربه»، «جاخالی» و «آزادسازی».
+- دسکتاپ: WASD یا کلیدهای جهت‌دار، Space برای حمله، Shift برای جاخالی و E برای تعامل.
 
-No Godot account or license secret is needed. A debug APK is for testing; a separately signed release build and real-device QA are still required before publishing.
+## ساخت و اعتبارسنجی اندروید
+Workflow با نام **Godot Android APK**:
+1. واردکردن و اعتبارسنجی پروژه Godot؛
+2. بررسی واردشدن مدل‌ها و پنج کتابخانه انیمیشن؛
+3. اجرای تست دود (smoke test) برای شروع کمپین، شخصیت‌ها، انیمیشن‌ها و صداها؛
+4. خروجی گرفتن APK اندروید و بارگذاری artifact.
 
-## Controls
-- Touch: directional buttons and «ضربه».
-- Keyboard: WASD / arrow keys to move, Space to attack.
+خروجی فعلی debug است و پیش از انتشار عمومی هنوز باید روی چند دستگاه واقعی آزمایش شود. نسخه فروشگاهی باید با کلید انتشار مستقل امضا شود.
+
+## دارایی‌ها و مجوزها
+منابع مدل‌ها، انیمیشن‌ها و افکت‌های صوتی در [ASSET_CREDITS_FA.md](ASSET_CREDITS_FA.md) ثبت شده‌اند. موسیقی و صدای گوینده در این نسخه وجود ندارد.

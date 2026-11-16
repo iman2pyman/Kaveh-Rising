@@ -15,6 +15,7 @@ var stamina := 100.0
 var coins := 0
 var defeated := 0
 var rescued := 0
+var rescued_this_chapter := 0
 var chapter := 0
 var wave := 1
 var saved_chapter := 0
@@ -629,6 +630,7 @@ func _resume() -> void:
 func _begin_chapter(index: int) -> void:
 	chapter = clampi(index,0,Chapters.chapter_count()-1)
 	wave = 1
+	rescued_this_chapter = 0
 	active = true
 	ended = false
 	title_panel.hide()
@@ -981,12 +983,13 @@ func _interact() -> void:
 	if is_instance_valid(cage):
 		cage.queue_free()
 	rescue_targets.remove_at(nearest_index)
-	rescued += 1
+ 	rescued += 1
+	rescued_this_chapter += 1
 	_play_anim(player,"General/Interact")
 	_play_sfx("door")
 	health = minf(MAX_HP,health+12)
 	hp_bar.value = health
-	_show_message("زندانی آزاد شد؛ مردم به خیزش می‌پیوندند (%d از ۳)" % mini(rescued,3))
+	_show_message("زندانی آزاد شد؛ مردم به خیزش می‌پیوندند (%d از ۳)" % mini(rescued_this_chapter,3))
 	if rescue_targets.is_empty():
 		interact_button.hide()
 
