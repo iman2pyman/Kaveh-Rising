@@ -68,7 +68,7 @@ namespace KavehRising
         bool chapterRewarded;
         public void CheckChapterCompletion()
         {
-            if (IsGameOver || IsVictory || EnemyHealth > 0) return;
+            if (IsGameOver || IsVictory || EnemyHealth > 0 || WaveIndex + 1 < WaveCount) return;
             if (missions != null && !missions.IsComplete)
             {
                 Notice = "دشمن شکست خورد؛ هدف‌های مرحله را کامل کن";
