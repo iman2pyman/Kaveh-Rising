@@ -209,10 +209,18 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 messageUntil = now + 1300L
             } else {
                 val damage = if (specialStrike) 2 else 1
+                val previousHealth = health
                 health = (health - damage).coerceAtLeast(0)
                 message = if (specialStrike) "حمله ویژه دشمن! دو واحد سلامتی از دست دادی" else "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
                 messageUntil = now + 1500L
-                if (health <= 0) gameOver = true
+                if (health <= 0) {
+                    gameOver = true
+                    message = "کاوه از پا افتاد؛ برای تلاش دوباره لمس کن"
+                    messageUntil = now + 4000L
+                } else if (health == 1 && previousHealth > 1) {
+                    message = "هشدار: سلامتی کاوه بحرانی است! از معجون یا جاخالی استفاده کن"
+                    messageUntil = now + 2200L
+                }
             }
         } else {
             enemyX += if (playerX > enemyX) .045f else -.045f
@@ -517,6 +525,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun usePotion() {
         val now = System.currentTimeMillis()
+        if (gameOver || won || paused || storyIntro) return
         if (potionUsed) {
             message = "معجون این فصل مصرف شده است"
         } else if (health >= 3) {
