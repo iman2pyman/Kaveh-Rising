@@ -505,5 +505,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paused = false
         message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
         messageUntil = System.currentTimeMillis() + 3500L
+        // Persist the full reset immediately so a process interruption cannot
+        // restore stale combat health or enemy progress on the next launch.
+        saveGameState()
     }
 }
