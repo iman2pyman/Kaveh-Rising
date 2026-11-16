@@ -32,6 +32,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var dodgeCooldownUntil = 0L
     private var dodgeActiveUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
+    private var storyIntro = true
     private var gameOver = false
     private var won = false
     private var message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
@@ -58,6 +59,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             else "درفش کاویانی برافراشته شد!\nلمس کن تا از ابتدا بازی کنی"
             drawOverlay(canvas, w, h, "پیروزی کاوه!", next)
         }
+        if (storyIntro && !gameOver && !won) drawStoryOverlay(canvas, w, h)
     }
 
     private fun drawWorld(canvas: Canvas, w: Float, h: Float) {
@@ -173,6 +175,38 @@ private class KavehGameView(private val host: Activity) : View(host) {
         canvas.drawText(label, rect.centerX(), rect.centerY() + height * .015f, paint)
     }
 
+    private fun drawStoryOverlay(canvas: Canvas, w: Float, h: Float) {
+        val chapter = ChapterData.chapters[chapterIndex]
+        paint.color = Color.argb(232, 12, 7, 5)
+        canvas.drawRect(0f, 0f, w, h, paint)
+        val panel = RectF(w * .08f, h * .28f, w * .92f, h * .70f)
+        paint.color = Color.rgb(72, 38, 20)
+        canvas.drawRoundRect(panel, 24f, 24f, paint)
+        paint.color = Color.rgb(235, 178, 72)
+        paint.textAlign = Paint.Align.CENTER
+        paint.textSize = min(w, h) * .052f
+        canvas.drawText("فصل ${chapterIndex + 1}: ${chapter.titleFa}", w / 2, h * .37f, paint)
+        paint.color = Color.rgb(255, 235, 205)
+        paint.textSize = min(w, h) * .038f
+        val maxTextWidth = w * .76f
+        val lines = mutableListOf<String>()
+        var line = ""
+        chapter.storyFa.split(" ").forEach { word ->
+            val candidate = if (line.isEmpty()) word else "$line $word"
+            if (paint.measureText(candidate) > maxTextWidth && line.isNotEmpty()) {
+                lines.add(line)
+                line = word
+            } else line = candidate
+        }
+        if (line.isNotEmpty()) lines.add(line)
+        lines.take(4).forEachIndexed { index, text ->
+            canvas.drawText(text, w / 2, h * (.46f + index * .055f), paint)
+        }
+        paint.color = Color.rgb(255, 210, 120)
+        paint.textSize = min(w, h) * .035f
+        canvas.drawText("برای آغاز این فصل لمس کن", w / 2, h * .64f, paint)
+    }
+
     private fun drawOverlay(canvas: Canvas, w: Float, h: Float, title: String, subtitle: String) {
         paint.color = Color.argb(220, 12, 7, 5)
         canvas.drawRect(0f, 0f, w, h, paint)
@@ -191,10 +225,16 @@ private class KavehGameView(private val host: Activity) : View(host) {
         if (event.action != MotionEvent.ACTION_DOWN) return true
         val w = width.toFloat()
         val h = height.toFloat()
+        if (storyIntro && !gameOver && !won) {
+            storyIntro = false
+            invalidate()
+            return true
+        }
         if (gameOver || won) {
             if (won) {
                 chapterIndex = if (chapterIndex < ChapterData.chapters.lastIndex) chapterIndex + 1 else 0
                 prefs.edit().putInt("chapter", chapterIndex).apply()
+                storyIntro = true
             }
             resetCombat()
             invalidate()
