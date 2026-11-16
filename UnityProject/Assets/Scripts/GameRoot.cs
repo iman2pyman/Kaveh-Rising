@@ -61,7 +61,7 @@ namespace KavehRising
 
         public void RegisterActors(PlayerMotor player, EnemyBrain enemy) { Player = player; Enemy = enemy; }
         public void SetNotice(string message) { Notice = message; }
-
+        bool chapterRewarded;
         public void CheckChapterCompletion()
         {
             if (IsGameOver || IsVictory || EnemyHealth > 0) return;
@@ -71,7 +71,12 @@ namespace KavehRising
                 return;
             }
             IsVictory = true;
-            UnlockedChapter = Mathf.Max(UnlockedChapter, Mathf.Min(Chapter + 1, Chapters.Length - 1));
+            if (!chapterRewarded)
+            {
+                chapterRewarded = true;
+                Score += 100 + Chapter * 25;
+                UnlockedChapter = Mathf.Max(UnlockedChapter, Mathf.Min(Chapter + 1, Chapters.Length - 1));
+            }
             Notice = Chapter == Chapters.Length - 1 ? "ضحاک شکست خورد؛ ایران آزاد شد!" : "پیروزی! فصل بعد آماده است";
             var audio = FindObjectOfType<GameAudio>();
             if (audio) audio.PlayVictory();
@@ -97,7 +102,6 @@ namespace KavehRising
             {
                 CombatEffects.Burst(Enemy.transform.position + Vector3.up, new Color(1f,.55f,.12f), 40);
                 Enemy.MarkDead();
-                Score += 100 + Chapter * 25;
                 CheckChapterCompletion();
             }
             SaveProgress();
@@ -123,7 +127,7 @@ namespace KavehRising
 
         void StartChapter(bool resetHealth)
         {
-            IsPaused = false; IsGameOver = false; IsVictory = false;
+            IsPaused = false; IsGameOver = false; IsVictory = false; chapterRewarded = false;
             if (resetHealth) Health = 5;
             HasPotion = true; EnemyHealth = Current.enemyHealth;
             if (Player) Destroy(Player.gameObject);
