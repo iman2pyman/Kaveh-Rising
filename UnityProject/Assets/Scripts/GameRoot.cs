@@ -92,7 +92,7 @@ namespace KavehRising
             GUI.Label(new Rect(24,67,Screen.width*.55f,26),Current.objective+"  |  "+(missions?missions.CurrentTask:""));
             float bw=Screen.width*.105f,bh=Screen.height*.14f,y=Screen.height-bh-14;
             if(GUI.RepeatButton(new Rect(12,y,bw,bh),"◀")&&Player)Player.SetMove(-1);
-            if(GUI.RepeatButton(new Rect(20+bw,y,bw,bh),"▶")&&Player)Player.SetMove(1);
+            if(GUI.RepeatButton(new Rect(20+bw,y,bw,bh),"▶")&&Player)Player.SetMove(1,0);\n            if(GUI.RepeatButton(new Rect(12,y-bh-8,bw,bh),"▲")&&Player)Player.SetMove(0,1);\n            if(GUI.RepeatButton(new Rect(20+bw,y-bh-8,bw,bh),"▼")&&Player)Player.SetMove(0,-1);
             if(GUI.RepeatButton(new Rect(Screen.width-bw*3-40,y,bw,bh),"مخفی‌کاری")&&Player)Player.SetCrouch(true); else if(Player)Player.SetCrouch(false);
             if(GUI.Button(new Rect(Screen.width-bw*4-53,y,bw,bh),"تعامل")&&Player&&missions){if(!missions.TryInteract(Player.transform))Notice="به هدف نزدیک‌تر شو";}
             if(GUI.Button(new Rect(Screen.width-bw*3-40,y-bh-8,bw,bh),"جاخالی")&&Player)Player.Dodge();
