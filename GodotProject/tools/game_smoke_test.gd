@@ -30,6 +30,12 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: combat animation was not merged")
 		quit(5)
 		return
+	game.call("_attack")
+	await process_frame
+	if hero_anim.current_animation != "Combat/Melee_1H_Attack_Chop":
+		push_error("SMOKE_FAIL: player attack animation did not play")
+		quit(21)
+		return
 	var enemies: Array = game.get("enemies")
 	if enemies.is_empty():
 		push_error("SMOKE_FAIL: first chapter did not spawn enemies")
