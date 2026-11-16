@@ -24,6 +24,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val prefs = host.getPreferences(Activity.MODE_PRIVATE)
     private var chapterIndex = prefs.getInt("chapter", 0).coerceIn(0, ChapterData.chapters.lastIndex)
+    private var score = prefs.getInt("score", 0).coerceAtLeast(0)
+    private var bestScore = prefs.getInt("best_score", 0).coerceAtLeast(0)
     private var playerX = 0.22f
     private var enemyX = 0.78f
     private var health = 3
@@ -197,6 +199,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.textSize = min(w, h) * .029f
         canvas.drawText("سلامتی کاوه: $health / 3", left + barWidth / 2, top + h * .045f, paint)
         canvas.drawText("${chapter.enemyNameFa}: $enemyHealth / ${chapter.enemyHealth}", right + barWidth / 2, top + h * .045f, paint)
+        paint.color = Color.rgb(255, 220, 145)
+        paint.textSize = min(w, h) * .028f
+        canvas.drawText("امتیاز: $score   |   رکورد: $bestScore", w / 2, h * .255f, paint)
         if (System.currentTimeMillis() < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
@@ -332,7 +337,13 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         if (gameOver || won) {
             if (won) {
-                chapterIndex = if (chapterIndex < ChapterData.chapters.lastIndex) chapterIndex + 1 else 0
+                if (chapterIndex < ChapterData.chapters.lastIndex) {
+                    chapterIndex++
+                } else {
+                    chapterIndex = 0
+                    score = 0
+                    prefs.edit().putInt("score", score).apply()
+                }
                 prefs.edit().putInt("chapter", chapterIndex).apply()
                 storyIntro = true
             }
@@ -379,7 +390,15 @@ private class KavehGameView(private val host: Activity) : View(host) {
             enemyHealth--
             message = "ضربه کاوه!"
             messageUntil = now + 1100L
-            if (enemyHealth <= 0) won = true
+            if (enemyHealth <= 0) {
+                val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
+                score += chapterReward
+                if (score > bestScore) bestScore = score
+                prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
+                message = "پیروزی! $chapterReward امتیاز دریافت کردی"
+                messageUntil = now + 1800L
+                won = true
+            }
         } else {
             message = "به دشمن نزدیک‌تر شو"
             messageUntil = now + 1100L
