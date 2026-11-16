@@ -66,6 +66,10 @@ jobs:
         run: |
           "$GODOT_BIN" --headless --editor --path GodotProject --quit
 
+      - name: Probe imported character rigs and animation libraries
+        run: |
+          "$GODOT_BIN" --headless --path GodotProject --script res://tools/asset_probe.gd
+
       - name: Export Android debug APK
         run: |
           mkdir -p GodotProject/build
