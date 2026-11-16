@@ -591,20 +591,23 @@ private class KavehGameView(private val host: Activity) : View(host) {
             enemyHealth = (enemyHealth - 3).coerceAtLeast(0)
             message = "ضربه سنگین کاوه! سه واحد آسیب"
             messageUntil = now + 1400L
-            if (enemyHealth == 0) {
-                val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
-                score += chapterReward
-                if (score > bestScore) bestScore = score
-                prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
-                message = "پیروزی! $chapterReward امتیاز دریافت کردی"
-                messageUntil = now + 1800L
-                won = true
-            }
+            if (enemyHealth == 0) finishEnemy(now)
             saveGameState()
         } else {
             message = "ضربه سنگین به هدف نرسید؛ به دشمن نزدیک‌تر شو"
             messageUntil = now + 1300L
         }
+    }
+
+    private fun finishEnemy(now: Long) {
+        val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
+        score += chapterReward
+        if (score > bestScore) bestScore = score
+        prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
+        message = "پیروزی! $chapterReward امتیاز دریافت کردی"
+        messageUntil = now + 1800L
+        won = true
+        saveGameState()
     }
 
     private fun attack() {
@@ -617,15 +620,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             enemyHealth--
             message = "ضربه کاوه!"
             messageUntil = now + 1100L
-            if (enemyHealth <= 0) {
-                val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
-                score += chapterReward
-                if (score > bestScore) bestScore = score
-                prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
-                message = "پیروزی! $chapterReward امتیاز دریافت کردی"
-                messageUntil = now + 1800L
-                won = true
-            }
+            if (enemyHealth == 0) finishEnemy(now)
             saveGameState()
         } else {
             message = "به دشمن نزدیک‌تر شو"
