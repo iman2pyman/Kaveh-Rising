@@ -45,6 +45,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var health = prefs.getInt("health", 3).coerceIn(0, 3)
     private var enemyHealth = prefs.getInt("enemy_health", ChapterData.chapters[chapterIndex].enemyHealth)
         .coerceIn(0, ChapterData.chapters[chapterIndex].enemyHealth)
+    private var enemyTurnCount = prefs.getInt("enemy_turn_count", 0).coerceAtLeast(0)
     private var hitCooldown = 0L
     private var attackEffectUntil = 0L
     private var attackEffectHit = false
@@ -76,6 +77,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             .putFloat("enemy_x", enemyX)
             .putInt("health", health)
             .putInt("enemy_health", enemyHealth)
+            .putInt("enemy_turn_count", enemyTurnCount)
             .putBoolean("story_intro", storyIntro)
             .putBoolean("potion_used", potionUsed)
             .putBoolean("game_over", gameOver)
@@ -195,14 +197,17 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val now = System.currentTimeMillis()
         if (now - lastEnemyStep < enemyStepInterval()) return
         lastEnemyStep = now
+        enemyTurnCount++
+        val specialStrike = chapterIndex >= 2 && enemyTurnCount % 3 == 0
         if (abs(enemyX - playerX) < .19f) {
             if (now < dodgeActiveUntil) {
-                message = "جاخالی موفق! ضربه دشمن بی‌اثر شد"
-                messageUntil = now + 1100L
+                message = if (specialStrike) "جاخالی عالی! حمله ویژه دشمن خنثی شد" else "جاخالی موفق! ضربه دشمن بی‌اثر شد"
+                messageUntil = now + 1300L
             } else {
-                health--
-                message = "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
-                messageUntil = now + 1400L
+                val damage = if (specialStrike) 2 else 1
+                health = (health - damage).coerceAtLeast(0)
+                message = if (specialStrike) "حمله ویژه دشمن! دو واحد سلامتی از دست دادی" else "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
+                messageUntil = now + 1500L
                 if (health <= 0) gameOver = true
             }
         } else {
@@ -265,7 +270,11 @@ private class KavehGameView(private val host: Activity) : View(host) {
             enemyIsClose && enemyStepProgress in (enemyInterval - 600L)..(enemyInterval - 1L)) {
             paint.color = Color.rgb(255, 105, 75)
             paint.textSize = min(w, h) * .032f
-            canvas.drawText("هشدار: نگهبان آماده ضربه است؛ جاخالی بده!", w / 2, h * .33f, paint)
+            val nextStrikeIsSpecial = chapterIndex >= 2 && (enemyTurnCount + 1) % 3 == 0
+            canvas.drawText(
+                if (nextStrikeIsSpecial) "هشدار: حمله ویژه دشمن! جاخالی بده!" else "هشدار: دشمن آماده ضربه است؛ جاخالی بده!",
+                w / 2, h * .33f, paint
+            )
         }
     }
 
@@ -542,6 +551,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         enemyX = .78f
         health = 3
         enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
+        enemyTurnCount = 0
         hitCooldown = 0L
         attackEffectUntil = 0L
         attackEffectHit = false
