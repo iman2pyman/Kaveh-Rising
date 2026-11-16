@@ -607,7 +607,6 @@ private class KavehGameView(private val host: Activity) : View(host) {
         message = "پیروزی! $chapterReward امتیاز دریافت کردی"
         messageUntil = now + 1800L
         won = true
-        saveGameState()
     }
 
     private fun attack() {
