@@ -78,12 +78,12 @@ func _run_test() -> void:
 		return
 	hero_anim.play("Movement/Running_A")
 	game.call("_toggle_pause")
-	if not get_tree().paused:
+	if not paused:
 		push_error("SMOKE_FAIL: pause menu did not pause the game")
 		quit(14)
 		return
 	game.call("_toggle_pause")
-	if get_tree().paused:
+	if paused:
 		push_error("SMOKE_FAIL: pause menu did not resume the game")
 		quit(15)
 		return
