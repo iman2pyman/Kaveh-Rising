@@ -23,7 +23,10 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
-        if (::gameView.isInitialized) gameView.saveGameState()
+        if (::gameView.isInitialized) {
+            gameView.pauseForLifecycle()
+            gameView.saveGameState()
+        }
         super.onPause()
     }
 
@@ -36,6 +39,8 @@ class MainActivity : Activity() {
 
 private class KavehGameView(private val host: Activity) : View(host) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // One reusable geometry object avoids repeated RectF allocations while drawing.
+    private val reusableRect = RectF()
     private val prefs = host.getPreferences(Activity.MODE_PRIVATE)
     private var chapterIndex = prefs.getInt("chapter", 0).coerceIn(0, ChapterData.chapters.lastIndex)
     private var score = prefs.getInt("score", 0).coerceAtLeast(0)
@@ -52,7 +57,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var heavyAttackEffectHit = false
     private var attackEffectUntil = 0L
     private var attackEffectHit = false
-    private var dodgeCooldownUntil = 0L
+    private var dodgeCooldownUntil = prefs.getLong("dodge_cooldown_until", 0L)
     private var dodgeActiveUntil = 0L
     private var playerDamageFlashUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
@@ -67,9 +72,18 @@ private class KavehGameView(private val host: Activity) : View(host) {
     fun pauseFromBack(): Boolean {
         if (storyIntro || gameOver || won || paused) return false
         paused = true
+        dodgeActiveUntil = 0L
         lastEnemyStep = System.currentTimeMillis()
         invalidate()
         return true
+    }
+
+    fun pauseForLifecycle() {
+        if (storyIntro || gameOver || won || paused) return
+        paused = true
+        dodgeActiveUntil = 0L
+        lastEnemyStep = System.currentTimeMillis()
+        invalidate()
     }
 
     fun saveGameState() {
@@ -83,6 +97,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             .putInt("enemy_health", enemyHealth)
             .putInt("enemy_turn_count", enemyTurnCount)
             .putLong("heavy_attack_ready_at", heavyAttackReadyAt)
+            .putLong("dodge_cooldown_until", dodgeCooldownUntil)
             .putBoolean("story_intro", storyIntro)
             .putBoolean("potion_used", potionUsed)
             .putBoolean("game_over", gameOver)
@@ -144,8 +159,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         canvas.drawColor(sky)
         paint.color = ridge
-        canvas.drawOval(RectF(-w * .2f, h * .28f, w * .55f, h * .68f), paint)
-        canvas.drawOval(RectF(w * .35f, h * .22f, w * 1.2f, h * .67f), paint)
+        canvas.drawOval(setRect(-w * .2f, h * .28f, w * .55f, h * .68f), paint)
+        canvas.drawOval(setRect(w * .35f, h * .22f, w * 1.2f, h * .67f), paint)
         paint.color = groundColor
         canvas.drawRect(0f, h * .69f, w, h * .82f, paint)
         paint.color = Color.rgb(45, 28, 20)
@@ -247,8 +262,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         canvas.drawText(chapter.subtitleFa, w / 2, h * .12f, paint)
         paint.textSize = min(w, h) * .029f
         canvas.drawText("فصل ${chapterIndex + 1} از ${ChapterData.chapters.size}", w / 2, h * .16f, paint)
-        drawButton(canvas, RectF(w * .03f, h * .035f, w * .19f, h * .105f), if (potionUsed) "معجون×" else "معجون")
-        drawButton(canvas, RectF(w * .83f, h * .035f, w * .97f, h * .105f), "Ⅱ")
+        drawButton(canvas, setRect(w * .03f, h * .035f, w * .19f, h * .105f), if (potionUsed) "معجون×" else "معجون")
+        drawButton(canvas, setRect(w * .83f, h * .035f, w * .97f, h * .105f), "Ⅱ")
 
         // Compact health bars make combat status readable at a glance.
         val barWidth = w * .30f
@@ -257,13 +272,13 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val right = w * .60f
         val top = h * .19f
         paint.color = Color.rgb(65, 35, 27)
-        canvas.drawRoundRect(RectF(left, top, left + barWidth, top + barHeight), 8f, 8f, paint)
-        canvas.drawRoundRect(RectF(right, top, right + barWidth, top + barHeight), 8f, 8f, paint)
+        canvas.drawRoundRect(setRect(left, top, left + barWidth, top + barHeight), 8f, 8f, paint)
+        canvas.drawRoundRect(setRect(right, top, right + barWidth, top + barHeight), 8f, 8f, paint)
         paint.color = Color.rgb(190, 55, 45)
-        canvas.drawRoundRect(RectF(left, top, left + barWidth * (health / 3f).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
+        canvas.drawRoundRect(setRect(left, top, left + barWidth * (health / 3f).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
         paint.color = Color.rgb(225, 165, 55)
         val enemyMax = chapter.enemyHealth.toFloat()
-        canvas.drawRoundRect(RectF(right, top, right + barWidth * (enemyHealth / enemyMax).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
+        canvas.drawRoundRect(setRect(right, top, right + barWidth * (enemyHealth / enemyMax).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
 
         paint.color = Color.WHITE
         paint.textSize = min(w, h) * .029f
@@ -282,7 +297,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         if (now < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
-            canvas.drawText(message, w / 2, h * .29f, paint)
+            canvas.drawText(message, w / 2, h * .335f, paint)
         }
 
         // Telegraph an incoming enemy strike so players can react with dodge.
@@ -296,7 +311,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             val nextStrikeIsSpecial = chapterIndex >= 2 && (enemyTurnCount + 1) % 3 == 0
             canvas.drawText(
                 if (nextStrikeIsSpecial) "هشدار: حمله ویژه دشمن! جاخالی بده!" else "هشدار: دشمن آماده ضربه است؛ جاخالی بده!",
-                w / 2, h * .33f, paint
+                w / 2, h * .385f, paint
             )
         }
     }
@@ -327,7 +342,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.strokeWidth = min(w, h) * .012f
         paint.color = if (attackEffectHit) Color.rgb(255, 220, 95) else Color.rgb(210, 170, 115)
         canvas.drawArc(
-            RectF(centerX - radius, centerY - radius, centerX + radius, centerY + radius),
+            setRect(centerX - radius, centerY - radius, centerX + radius, centerY + radius),
             if (enemyX >= playerX) 205f else -25f,
             if (enemyX >= playerX) 125f else -125f,
             false,
@@ -378,7 +393,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 paint.color = Color.rgb(190, 175, 145)
                 canvas.drawRect(x - scale * 3.5f, headY - scale * 3f, x + scale * 3.5f, headY - scale * 1.5f, paint)
                 paint.color = Color.rgb(135, 85, 45)
-                canvas.drawOval(RectF(x + width * .035f, ground - height * .09f, x + width * .085f, ground - height * .015f), paint)
+                canvas.drawOval(setRect(x + width * .035f, ground - height * .09f, x + width * .085f, ground - height * .015f), paint)
             }
             2 -> { // mountain demon: horned head and broad shoulders
                 paint.color = Color.rgb(75, 105, 91)
@@ -396,7 +411,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             }
             4 -> { // commander: raised crest and dark cloak
                 paint.color = Color.rgb(75, 25, 22)
-                canvas.drawOval(RectF(x - width * .065f, ground - height * .09f, x + width * .065f, ground + height * .015f), paint)
+                canvas.drawOval(setRect(x - width * .065f, ground - height * .09f, x + width * .065f, ground + height * .015f), paint)
                 paint.color = Color.rgb(220, 170, 65)
                 canvas.drawPath(android.graphics.Path().apply {
                     moveTo(x, headY - scale * 9f)
@@ -422,14 +437,19 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawControls(canvas: Canvas, w: Float, h: Float) {
-        drawButton(canvas, RectF(w * .02f, h * .84f, w * .19f, h * .96f), "◀")
-        drawButton(canvas, RectF(w * .21f, h * .84f, w * .38f, h * .96f), "▶")
+        drawButton(canvas, setRect(w * .02f, h * .84f, w * .19f, h * .96f), "◀")
+        drawButton(canvas, setRect(w * .21f, h * .84f, w * .38f, h * .96f), "▶")
         val now = System.currentTimeMillis()
         val dodgeLabel = if (now < dodgeCooldownUntil) "جاخالی…" else "جاخالی"
         val heavyLabel = if (now < heavyAttackReadyAt) "سنگین…" else "سنگین"
-        drawButton(canvas, RectF(w * .40f, h * .84f, w * .58f, h * .96f), dodgeLabel)
-        drawButton(canvas, RectF(w * .60f, h * .84f, w * .78f, h * .96f), "حمله")
-        drawButton(canvas, RectF(w * .80f, h * .84f, w * .98f, h * .96f), heavyLabel)
+        drawButton(canvas, setRect(w * .40f, h * .84f, w * .58f, h * .96f), dodgeLabel)
+        drawButton(canvas, setRect(w * .60f, h * .84f, w * .78f, h * .96f), "حمله")
+        drawButton(canvas, setRect(w * .80f, h * .84f, w * .98f, h * .96f), heavyLabel)
+    }
+
+    private fun setRect(left: Float, top: Float, right: Float, bottom: Float): RectF {
+        reusableRect.set(left, top, right, bottom)
+        return reusableRect
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
@@ -445,7 +465,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val chapter = ChapterData.chapters[chapterIndex]
         paint.color = Color.argb(232, 12, 7, 5)
         canvas.drawRect(0f, 0f, w, h, paint)
-        val panel = RectF(w * .08f, h * .28f, w * .92f, h * .70f)
+        val panel = setRect(w * .08f, h * .28f, w * .92f, h * .70f)
         paint.color = Color.rgb(72, 38, 20)
         canvas.drawRoundRect(panel, 24f, 24f, paint)
         paint.color = Color.rgb(235, 178, 72)
@@ -493,6 +513,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val h = height.toFloat()
         if (paused) {
             paused = false
+            dodgeActiveUntil = 0L
             // Restart the enemy cadence so resuming never causes an immediate hit.
             lastEnemyStep = System.currentTimeMillis()
             invalidate()
@@ -576,6 +597,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         // A short invulnerability window rewards timing without making combat trivial.
         dodgeActiveUntil = now + 650L
         dodgeCooldownUntil = now + 1800L
+        saveGameState()
         playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)
         message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"
         messageUntil = now + 1200L
