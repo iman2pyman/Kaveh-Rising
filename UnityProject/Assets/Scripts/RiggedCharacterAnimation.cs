@@ -8,6 +8,8 @@ namespace KavehRising
         Animation animationPlayer;
         Transform upperArmL, upperArmR, thighL, thighR, spine, calfL, calfR;
         string locomotion = "Idle";
+        string desiredLocomotion = "Idle";
+        float actionUntil;
         bool dead;
         void Awake()
         {
@@ -96,17 +98,28 @@ namespace KavehRising
         {
             if(!animationPlayer||dead&&state!="Death")return;
             string clip=external.ContainsKey(state)?external[state]:state;
-            if(animationPlayer[clip]==null)return;
+            var animationState=animationPlayer[clip];
+            if(animationState==null)return;
             animationPlayer.CrossFade(clip,fade);locomotion=state;
+        }
+        void PlayAction(string state,float fade)
+        {
+            if(dead)return;
+            Play(state,fade);
+            string clip=external.ContainsKey(state)?external[state]:state;
+            var animationState=animationPlayer[clip];
+            actionUntil=Time.time+(animationState!=null?Mathf.Max(.25f,animationState.length*.88f):.5f);
         }
         public void SetLocomotion(float speed,bool crouching)
         {
-            if(dead)return;string state=crouching?"Crouch":speed>.68f?"Run":speed>.08f?"Walk":"Idle";
-            if(state!=locomotion)Play(state);
+            if(dead)return;
+            desiredLocomotion=crouching?"Crouch":speed>.68f?"Run":speed>.08f?"Walk":"Idle";
+            if(Time.time<actionUntil)return;
+            if(desiredLocomotion!=locomotion)Play(desiredLocomotion);
         }
-        public void PlayAttack(bool heavy){if(!dead)Play(heavy?"HeavyAttack":"Attack",.04f);}
-        public void PlayDodge(){if(!dead)Play("Dodge",.03f);}
-        public void PlayHit(){if(!dead)Play("Hit",.04f);}
+        public void PlayAttack(bool heavy){PlayAction(heavy?"HeavyAttack":"Attack",.04f);}
+        public void PlayDodge(){PlayAction("Dodge",.03f);}
+        public void PlayHit(){PlayAction("Hit",.04f);}
         public void PlayDeath(){if(dead)return;dead=true;Play("Death",.08f);}
     }
 }
