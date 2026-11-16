@@ -80,6 +80,9 @@ namespace KavehRising.Editor
             PlayerSettings.Android.bundleVersionCode = 1;
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
 
+            // Do not produce an APK from an incomplete or misconfigured project.
+            ProjectPreflightValidator.ValidateOrThrow();
+
             string fullOutputPath = Path.GetFullPath(outputPath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath));
 
