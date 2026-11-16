@@ -2,37 +2,38 @@ using UnityEngine;
 
 namespace KavehRising
 {
-    // Small synthesized effects keep the prototype self-contained until recorded audio is authored.
-    public class GameAudio : MonoBehaviour
+    // Gameplay SFX only. Background music and Persian voice acting are intentionally user-supplied later.
+    public sealed class GameAudio : MonoBehaviour
     {
         AudioSource source;
-        AudioClip hit, heavy, hurt, win, ambience;
+        AudioClip lightHit, heavyHit, hurt, victory, swing, forge, door, metal, stoneStep, grassStep;
+
         void Awake()
         {
-            source=gameObject.AddComponent<AudioSource>(); source.playOnAwake=false; source.spatialBlend=0f;
-            hit=Tone("Hammer impact",115f,.16f,.28f);
-            heavy=Tone("Heavy hammer",72f,.32f,.38f);
-            hurt=Tone("Damage",185f,.22f,.24f);
-            win=Tone("Victory",520f,.55f,.2f);
-            ambience=Tone("Low forge ambience",58f,2f,.055f);
-            source.clip=ambience; source.loop=true; source.Play();
+            source=gameObject.AddComponent<AudioSource>();
+            source.playOnAwake=false;
+            source.loop=false;
+            source.spatialBlend=0f;
+            lightHit=Load("impact-light");
+            heavyHit=Load("hammer-heavy");
+            hurt=Load("armor-hit");
+            victory=Load("victory-bell");
+            swing=Load("weapon-swing");
+            forge=Load("forge-chop");
+            door=Load("dungeon-door");
+            metal=Load("metal-clang");
+            stoneStep=Load("footstep-stone");
+            grassStep=Load("footstep-grass");
         }
-        AudioClip Tone(string name,float frequency,float seconds,float volume)
-        {
-            const int rate=22050; int count=Mathf.CeilToInt(rate*seconds);
-            var data=new float[count];
-            for(int i=0;i<count;i++)
-            {
-                float t=(float)i/rate;
-                float envelope=Mathf.Exp(-t*(name.Contains("ambience")?.8f:9f));
-                float fundamental=Mathf.Sin(2*Mathf.PI*frequency*t);
-                float grit=Mathf.Sin(2*Mathf.PI*frequency*2.73f*t)*.22f;
-                data[i]=(fundamental+grit)*envelope*volume;
-            }
-            var clip=AudioClip.Create(name,count,1,rate,false); clip.SetData(data,0); return clip;
-        }
-        public void PlayHit(bool isHeavy){source.PlayOneShot(isHeavy?heavy:hit);}
-        public void PlayHurt(){source.PlayOneShot(hurt);}
-        public void PlayVictory(){source.PlayOneShot(win);}
+        AudioClip Load(string name){return Resources.Load<AudioClip>("Audio/SFX/"+name);}
+        void Play(AudioClip clip,float volume=1f){if(clip&&source)source.PlayOneShot(clip,volume);}
+        public void PlayHit(bool isHeavy){Play(isHeavy?heavyHit:lightHit,isHeavy?.95f:.72f);}
+        public void PlayHurt(){Play(hurt,.8f);}
+        public void PlayVictory(){Play(victory,.85f);}
+        public void PlaySwing(bool isHeavy){Play(swing,isHeavy?.9f:.58f);}
+        public void PlayFootstep(bool crouching){Play(crouching?grassStep:stoneStep,crouching?.22f:.42f);}
+        public void PlayForge(){Play(forge,.65f);}
+        public void PlayDoor(){Play(door,.8f);}
+        public void PlayObjective(){Play(metal,.6f);}
     }
 }
