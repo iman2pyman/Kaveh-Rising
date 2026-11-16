@@ -10,6 +10,8 @@ var camera: Camera3D
 var arena: Node3D
 var enemies: Array[CharacterBody3D] = []
 var rescue_targets: Array[Dictionary] = []
+var max_health := MAX_HP
+var attack_damage := DAMAGE
 var health := MAX_HP
 var stamina := 100.0
 var coins := 0
@@ -25,6 +27,8 @@ var sfx_cursor := 0
 var sfx_volume := 0.8
 var pause_button: Button
 var pause_panel: PanelContainer
+var upgrade_button: Button
+var upgrade_panel: PanelContainer
 var animation_library_cache: Dictionary = {}
 var footstep_clock := 0.0
 var active := false
@@ -492,7 +496,7 @@ func _make_hud() -> void:
 	chapter_text = Label.new()
 	chapter_text.add_theme_font_size_override("font_size",21)
 	vbox.add_child(chapter_text)
-	hp_bar = _bar(vbox,"سلامتی کاوه",MAX_HP,health)
+	hp_bar = _bar(vbox,"سلامتی کاوه",max_health,health)
 	stamina_bar = _bar(vbox,"توان رزمی",100,stamina)
 	objective = Label.new()
 	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -575,6 +579,8 @@ func _make_controls() -> void:
 	interact_button = _control_button("آزادسازی",Vector2(-150,-270),Vector2(130,60))
 	interact_button.pressed.connect(_interact)
 	interact_button.hide()
+	upgrade_button = _control_button("ارتقا",Vector2(-150,-340),Vector2(130,58))
+	upgrade_button.pressed.connect(_open_upgrade_menu)
 	pause_button = Button.new()
 	pause_button.text = "Ⅱ"
 	pause_button.tooltip_text = "توقف بازی"
@@ -631,7 +637,7 @@ func _show_title() -> void:
 	title_panel.show()
 
 func _start_new() -> void:
-	health = MAX_HP
+	health = max_health
 	coins = 0
 	defeated = 0
 	rescued = 0
@@ -656,7 +662,7 @@ func _begin_chapter(index: int) -> void:
 		_make_kaviani_banner()
 	player.position = Vector3(0,0,5)
 	player.velocity = Vector3.ZERO
-	health = minf(MAX_HP,health+25)
+	health = minf(max_health,health+25)
 	hp_bar.value = health
 	chapter_text.text = "فصل %d از ۱۰  |  %s" % [chapter+1,data.title]
 	objective.text = str(data.mission)
@@ -896,12 +902,32 @@ func _update_enemies(delta: float) -> void:
 		var offset: Vector3 = player.global_position-enemy.global_position
 		offset.y = 0
 		var distance: float = offset.length()
-		var reach := 2.2 if enemy.get_meta("kind") == "boss" else 1.6
+		var enemy_speed: float = float(enemy.get_meta("speed"))
+		var enemy_power: float = float(enemy.get_meta("power"))
+		var reach: float = 2.2 if enemy.get_meta("kind") == "boss" else 1.6
+		if enemy.get_meta("kind") == "boss":
+			var hp_ratio := float(enemy.get_meta("hp")) / float(enemy.get_meta("max_hp"))
+			var rage_phase := 0
+			if hp_ratio <= 0.25:
+				rage_phase = 2
+				enemy_speed = 2.75
+				enemy_power = 32.0
+				reach = 3.0
+			elif hp_ratio <= 0.60:
+				rage_phase = 1
+				enemy_speed = 2.2
+				enemy_power = 25.0
+				reach = 2.6
+			if int(enemy.get_meta("rage_phase",0)) != rage_phase:
+				enemy.set_meta("rage_phase",rage_phase)
+				if rage_phase > 0:
+					_show_message("ضحاک خشمگین‌تر شده است!")
+					_play_sfx("metal")
 		if distance > reach:
 			_play_anim(enemy,"Movement/Running_A")
 			var dir: Vector3 = offset.normalized()
-			enemy.velocity.x = dir.x*float(enemy.get_meta("speed"))
-			enemy.velocity.z = dir.z*float(enemy.get_meta("speed"))
+			enemy.velocity.x = dir.x*enemy_speed
+			enemy.velocity.z = dir.z*enemy_speed
 			enemy.rotation.y = atan2(-dir.x,-dir.z)
 		else:
 			_play_anim(enemy,"General/Idle_A")
@@ -911,7 +937,7 @@ func _update_enemies(delta: float) -> void:
 			if cd <= 0:
 				cd = randf_range(1.0,1.6)
 				if invulnerable <= 0:
-					_take_damage(float(enemy.get_meta("power")))
+					_take_damage(enemy_power)
 			enemy.set_meta("cooldown",cd)
 		enemy.velocity.y -= 22*delta
 		enemy.move_and_slide()
@@ -943,15 +969,16 @@ func _attack() -> void:
 		var offset: Vector3 = enemy.global_position-player.global_position
 		var reach := 3.0 if enemy.get_meta("kind") == "boss" else 2.7
 		if offset.length() <= reach and (-player.global_transform.basis.z).dot(offset.normalized()) > -0.15:
-			var hp := maxf(0,float(enemy.get_meta("hp"))-DAMAGE-(8 if chapter == 8 else 0))
+			var hp := maxf(0,float(enemy.get_meta("hp"))-attack_damage-(8 if chapter == 8 else 0))
 			enemy.set_meta("hp",hp)
 			hit = true
 			_hit_effect(enemy.global_position+Vector3(0,1,0))
 			if hp <= 0:
 				defeated += 1
 				coins += 100 if enemy.get_meta("kind") == "boss" else 10
-				enemy.queue_free()
-				enemies.erase(enemy)
+				_defeat_enemy(enemy)
+			else:
+				_play_anim(enemy,"General/Hit_A")
 	if hit:
 		_play_sfx("metal")
 		_show_message("ضربه سنگین کاوه!")
@@ -1002,7 +1029,7 @@ func _interact() -> void:
 	rescued_this_chapter += 1
 	_play_anim(player,"General/Interact")
 	_play_sfx("door")
-	health = minf(MAX_HP,health+12)
+	health = minf(max_health,health+12)
 	hp_bar.value = health
 	_show_message("زندانی آزاد شد؛ مردم به خیزش می‌پیوندند (%d از ۳)" % mini(rescued_this_chapter,3))
 	if rescue_targets.is_empty():
@@ -1017,6 +1044,18 @@ func _take_damage(amount: float) -> void:
 	hp_bar.value = health
 	invulnerable = 0.45
 	_show_message("ضربه خوردی؛ جاخالی بده!")
+
+func _defeat_enemy(enemy: CharacterBody3D) -> void:
+	_play_anim(enemy,"General/Death_A")
+	enemy.velocity = Vector3.ZERO
+	for child in enemy.get_children():
+		if child is CollisionShape3D:
+			child.set_deferred("disabled",true)
+	enemies.erase(enemy)
+	get_tree().create_timer(1.15).timeout.connect(func():
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	)
 
 func _hit_effect(pos: Vector3) -> void:
 	var spark := MeshInstance3D.new()
@@ -1168,6 +1207,72 @@ func _show_message(text_value: String) -> void:
 	message.text = text_value
 	message_cd = 2.7
 
+func _open_upgrade_menu() -> void:
+	if not active or ended or get_tree().paused:
+		return
+	get_tree().paused = true
+	upgrade_panel = PanelContainer.new()
+	upgrade_panel.set_anchors_preset(Control.PRESET_CENTER)
+	upgrade_panel.position = Vector2(-205,-175)
+	upgrade_panel.custom_minimum_size = Vector2(410,350)
+	hud.add_child(upgrade_panel)
+	var box := VBoxContainer.new()
+	upgrade_panel.add_child(box)
+	var title := Label.new()
+	title.text = "کارگاه ارتقای کاوه"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size",26)
+	box.add_child(title)
+	var balance := Label.new()
+	balance.name = "Balance"
+	balance.text = "سکه‌های تو: %d" % coins
+	balance.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(balance)
+	var hammer_upgrade := Button.new()
+	hammer_upgrade.text = "تقویت چکش  |  ۵۰ سکه  |  +۸ قدرت ضربه"
+	hammer_upgrade.custom_minimum_size.y = 54
+	hammer_upgrade.pressed.connect(func():
+		if coins < 50:
+			balance.text = "سکه کافی نداری؛ با شکست دشمنان سکه بگیر."
+			return
+		coins -= 50
+		attack_damage += 8.0
+		_update_counts()
+		_save(chapter)
+		balance.text = "قدرت ضربه افزایش یافت! قدرت فعلی: %d" % int(attack_damage)
+		hammer_upgrade.disabled = true
+	)
+	box.add_child(hammer_upgrade)
+	var armor_upgrade := Button.new()
+	armor_upgrade.text = "تقویت زره  |  ۴۰ سکه  |  +۲۰ سلامتی"
+	armor_upgrade.custom_minimum_size.y = 54
+	armor_upgrade.pressed.connect(func():
+		if coins < 40:
+			balance.text = "سکه کافی نداری؛ با شکست دشمنان سکه بگیر."
+			return
+		coins -= 40
+		max_health += 20.0
+		health = minf(max_health,health+20.0)
+		hp_bar.max_value = max_health
+		hp_bar.value = health
+		_update_counts()
+		_save(chapter)
+		balance.text = "زره تقویت شد! سلامتی بیشینه: %d" % int(max_health)
+		armor_upgrade.disabled = true
+	)
+	box.add_child(armor_upgrade)
+	var close := Button.new()
+	close.text = "بازگشت به نبرد"
+	close.custom_minimum_size.y = 48
+	close.pressed.connect(_close_upgrade_menu)
+	box.add_child(close)
+
+func _close_upgrade_menu() -> void:
+	get_tree().paused = false
+	if is_instance_valid(upgrade_panel):
+		upgrade_panel.queue_free()
+	upgrade_panel = null
+
 func _toggle_pause() -> void:
 	if not active or ended:
 		return
@@ -1237,6 +1342,9 @@ func _load_save() -> void:
 		saved_chapter = clampi(int(cfg.get_value("campaign","chapter",0)),0,Chapters.chapter_count()-1)
 		coins = int(cfg.get_value("campaign","coins",0))
 		sfx_volume = clampf(float(cfg.get_value("settings","sfx_volume",0.8)),0.0,1.0)
+		attack_damage = maxf(DAMAGE,float(cfg.get_value("upgrades","attack_damage",DAMAGE)))
+		max_health = maxf(MAX_HP,float(cfg.get_value("upgrades","max_health",MAX_HP)))
+		health = max_health
 
 func _clear_enemies() -> void:
 	for enemy in enemies:
