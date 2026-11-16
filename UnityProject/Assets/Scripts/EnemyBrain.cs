@@ -38,7 +38,8 @@ namespace KavehRising
                     transform.position += patrol.normalized * .55f * Time.deltaTime;
                     transform.forward = patrol.normalized;
                 }
-                if (animationDriver) animationDriver.SetLocomotion(.2f, false);\n                if (rigAnimation) rigAnimation.SetLocomotion(.2f,false);
+                if (animationDriver) animationDriver.SetLocomotion(.2f, false);
+                if (rigAnimation) rigAnimation.SetLocomotion(.2f,false);
                 return;
             }
             if (distance > 2.15f)
@@ -46,20 +47,23 @@ namespace KavehRising
                 float speed = root.Player.IsCrouching ? .8f : 1.45f;
                 transform.position += delta.normalized * speed * Time.deltaTime;
                 if (delta.sqrMagnitude > .01f) transform.forward = delta.normalized;
-                if (animationDriver) animationDriver.SetLocomotion(speed / 1.45f, false);\n                if (rigAnimation) rigAnimation.SetLocomotion(speed/1.45f,false);
+                if (animationDriver) animationDriver.SetLocomotion(speed / 1.45f, false);
+                if (rigAnimation) rigAnimation.SetLocomotion(speed/1.45f,false);
             }
             else if (Time.time >= nextStrike)
             {
                 nextStrike = Time.time + 1.8f;
                 if (!root.Player.IsDodging) root.DamagePlayer(1);
-                if (animationDriver) animationDriver.PlayAttack(false);\n                if (rigAnimation) rigAnimation.PlayAttack(false);
+                if (animationDriver) animationDriver.PlayAttack(false);
+                if (rigAnimation) rigAnimation.PlayAttack(false);
             }
         }
         public void MarkDead()
         {
             if (IsDead) return;
             IsDead = true;
-            if (animationDriver) animationDriver.PlayDeath();\n            if (rigAnimation) rigAnimation.PlayDeath();
+            if (animationDriver) animationDriver.PlayDeath();
+            if (rigAnimation) rigAnimation.PlayDeath();
             foreach (var c in GetComponents<Collider>()) c.enabled = false;
             enabled = false;
             Destroy(gameObject, 2.5f);

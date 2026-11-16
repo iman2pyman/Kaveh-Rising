@@ -98,22 +98,29 @@ namespace KavehRising
         }
         public static void SpawnActors(GameRoot root)
         {
-            var heroPrefab=Resources.Load<GameObject>("Characters/KavehHero");\n            var enemyPrefab=Resources.Load<GameObject>("Characters/DahhakWarrior");\n            var prefab=heroPrefab?heroPrefab:Resources.Load<GameObject>("Characters/KavehHumanoid");\n            var foePrefab=enemyPrefab?enemyPrefab:prefab;
+            var heroPrefab=Resources.Load<GameObject>("Characters/KavehHero");
+            var enemyPrefab=Resources.Load<GameObject>("Characters/DahhakWarrior");
+            var prefab=heroPrefab?heroPrefab:Resources.Load<GameObject>("Characters/KavehHumanoid");
+            var foePrefab=enemyPrefab?enemyPrefab:prefab;
             var hero=new GameObject("Kaveh - Blacksmith Rebel"); hero.transform.position=prefab?new Vector3(-3,0,0):new Vector3(-3,1,0);
             var cc=hero.AddComponent<CharacterController>(); cc.height=1.9f; cc.radius=.38f; cc.center=new Vector3(0,.95f,0);
             if(prefab)
             {
                 var model=Object.Instantiate(prefab,hero.transform); model.name="Kaveh rigged humanoid"; model.transform.localPosition=Vector3.zero; model.transform.localRotation=Quaternion.identity; model.transform.localScale=Vector3.one;
-                var animator=model.GetComponentInChildren<Animator>();\n                if(animator){animator.applyRootMotion=false;if(!animator.GetComponent<HumanoidAnimationDriver>())animator.gameObject.AddComponent<HumanoidAnimationDriver>();}\n                else {hero.AddComponent<Animation>();hero.AddComponent<RiggedCharacterAnimation>();}
+                var animator=model.GetComponentInChildren<Animator>();
+                if(animator){animator.applyRootMotion=false;if(!animator.GetComponent<HumanoidAnimationDriver>())animator.gameObject.AddComponent<HumanoidAnimationDriver>();}
+                else {hero.AddComponent<Animation>();hero.AddComponent<RiggedCharacterAnimation>();}
             }
-            else { hero.AddComponent<PlayerMotor>(); var fallback=hero.AddComponent<CharacterVisuals>(); fallback.IsHero=true; }
+            else { var fallback=hero.AddComponent<CharacterVisuals>(); fallback.IsHero=true; }
             if(!hero.GetComponent<PlayerMotor>())hero.AddComponent<PlayerMotor>();
             var foe=new GameObject(root.Current.enemyName); foe.transform.position=prefab?new Vector3(3,0,0):new Vector3(3,1,0);
             if(prefab)
             {
                 var model=Object.Instantiate(prefab,foe.transform); model.name="Enemy rigged humanoid"; model.transform.localPosition=Vector3.zero; model.transform.localRotation=Quaternion.identity; model.transform.localScale=Vector3.one*(root.Chapter==9?1.22f:1.08f);
                 foreach(var renderer in model.GetComponentsInChildren<Renderer>()) { renderer.material=new Material(renderer.material); renderer.material.color=root.Chapter==9?new Color(.48f,.12f,.16f):new Color(.32f,.38f,.34f); }
-                var animator=model.GetComponentInChildren<Animator>();\n                if(animator){animator.applyRootMotion=false;if(!animator.GetComponent<HumanoidAnimationDriver>())animator.gameObject.AddComponent<HumanoidAnimationDriver>();}\n                else {foe.AddComponent<Animation>();foe.AddComponent<RiggedCharacterAnimation>();}
+                var animator=model.GetComponentInChildren<Animator>();
+                if(animator){animator.applyRootMotion=false;if(!animator.GetComponent<HumanoidAnimationDriver>())animator.gameObject.AddComponent<HumanoidAnimationDriver>();}
+                else {foe.AddComponent<Animation>();foe.AddComponent<RiggedCharacterAnimation>();}
             }
             var enemyCollider=foe.AddComponent<CapsuleCollider>(); enemyCollider.height=2.2f; enemyCollider.radius=.42f; enemyCollider.center=new Vector3(0,1.05f,0);
             var brain=foe.AddComponent<EnemyBrain>();
