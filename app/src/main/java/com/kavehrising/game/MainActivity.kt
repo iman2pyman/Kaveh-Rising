@@ -256,6 +256,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.textSize = min(w, h) * .029f
         canvas.drawText("سلامتی کاوه: $health / 3", left + barWidth / 2, top + h * .045f, paint)
         canvas.drawText("${chapter.enemyNameFa}: $enemyHealth / ${chapter.enemyHealth}", right + barWidth / 2, top + h * .045f, paint)
+        val now = System.currentTimeMillis()
         paint.color = Color.rgb(255, 220, 145)
         paint.textSize = min(w, h) * .028f
         canvas.drawText("امتیاز: $score   |   رکورد: $bestScore", w / 2, h * .255f, paint)
@@ -265,7 +266,6 @@ private class KavehGameView(private val host: Activity) : View(host) {
             if (now < heavyAttackReadyAt) "ضربه سنگین: ${((heavyAttackReadyAt - now + 999L) / 1000L)} ثانیه" else "ضربه سنگین آماده است؛ گوشه راست میدان را لمس کن",
             w / 2, h * .285f, paint
         )
-        val now = System.currentTimeMillis()
         if (now < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
@@ -387,12 +387,14 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawControls(canvas: Canvas, w: Float, h: Float) {
-        drawButton(canvas, RectF(w * .03f, h * .84f, w * .25f, h * .96f), "◀")
-        drawButton(canvas, RectF(w * .27f, h * .84f, w * .49f, h * .96f), "▶")
+        drawButton(canvas, RectF(w * .02f, h * .84f, w * .19f, h * .96f), "◀")
+        drawButton(canvas, RectF(w * .21f, h * .84f, w * .38f, h * .96f), "▶")
         val now = System.currentTimeMillis()
         val dodgeLabel = if (now < dodgeCooldownUntil) "جاخالی…" else "جاخالی"
-        drawButton(canvas, RectF(w * .51f, h * .84f, w * .72f, h * .96f), dodgeLabel)
-        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), "⚒ حمله")
+        val heavyLabel = if (now < heavyAttackReadyAt) "سنگین…" else "سنگین"
+        drawButton(canvas, RectF(w * .40f, h * .84f, w * .58f, h * .96f), dodgeLabel)
+        drawButton(canvas, RectF(w * .60f, h * .84f, w * .78f, h * .96f), "حمله")
+        drawButton(canvas, RectF(w * .80f, h * .84f, w * .98f, h * .96f), heavyLabel)
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
@@ -497,14 +499,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         if (event.y > h * .82f) {
             when {
-                event.x < w * .26f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
-                event.x < w * .50f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
-                event.x < w * .73f -> dodge()
-                else -> attack()
+                event.x < w * .20f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
+                event.x < w * .39f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
+                event.x < w * .59f -> dodge()
+                event.x < w * .79f -> attack()
+                else -> heavyAttack()
             }
-        } else if (event.y > h * .34f && event.x > w * .78f) {
-            // The upper-right arena area activates the charged hammer strike.
-            heavyAttack()
         } else {
             playerX = (playerX + if (event.x > w / 2) .05f else -.05f).coerceIn(.08f, .92f)
         }
