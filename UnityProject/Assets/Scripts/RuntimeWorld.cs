@@ -5,78 +5,81 @@ namespace KavehRising
     public static class RuntimeWorld
     {
         static Transform environmentRoot;
-        static Material Mat(Color c)
+        static Material Mat(Color c,float metallic=0f)
         {
-            var shader = Shader.Find("Standard");
-            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
-            var m = new Material(shader); m.color = c; return m;
+            var shader=Shader.Find("Standard"); if(shader==null) shader=Shader.Find("Universal Render Pipeline/Lit");
+            var m=new Material(shader); m.color=c; m.SetFloat("_Metallic",metallic); return m;
         }
-        static GameObject Cube(string name, Vector3 pos, Vector3 scale, Material mat)
+        static GameObject Cube(string name,Vector3 pos,Vector3 scale,Material mat)
         {
-            var o = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            o.name=name; o.transform.position=pos; o.transform.localScale=scale;
-            o.GetComponent<Renderer>().material=mat;
-            if(environmentRoot!=null) o.transform.SetParent(environmentRoot,true);
-            return o;
+            var o=GameObject.CreatePrimitive(PrimitiveType.Cube); o.name=name;
+            o.transform.position=pos; o.transform.localScale=scale; o.GetComponent<Renderer>().material=mat;
+            o.transform.SetParent(environmentRoot,true); return o;
+        }
+        static void Pillar(float x,float z,Material stone,Material trim)
+        {
+            Cube("Carved column",new Vector3(x,1.7f,z),new Vector3(.85f,3.4f,.85f),stone);
+            Cube("Column capital",new Vector3(x,3.45f,z),new Vector3(1.25f,.25f,1.25f),trim);
+            Cube("Column base",new Vector3(x,.15f,z),new Vector3(1.2f,.3f,1.2f),trim);
         }
         public static void BuildEnvironment(ChapterData chapter)
         {
             if(environmentRoot!=null) Object.Destroy(environmentRoot.gameObject);
             environmentRoot=new GameObject("Chapter Environment").transform;
-            RenderSettings.skybox=null;
+            RenderSettings.skybox=null; RenderSettings.fog=true; RenderSettings.fogColor=chapter.sky; RenderSettings.fogDensity=.012f;
             if(Camera.main==null) throw new System.Exception("Main Camera was not created by Bootstrap.");
-            Camera.main.backgroundColor=chapter.sky;
-            RenderSettings.ambientLight=new Color(.48f,.43f,.38f);
-            var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);
-            floor.name="Persian landscape"; floor.transform.localScale=new Vector3(3,1,2);
-            floor.GetComponent<Renderer>().material=Mat(chapter.ground);
-            floor.transform.SetParent(environmentRoot,true);
-            var stone=Mat(new Color(.34f,.27f,.22f));
-            var darkStone=Mat(new Color(.19f,.17f,.17f));
-            for(int i=0;i<9;i++)
+            Camera.main.backgroundColor=chapter.sky; RenderSettings.ambientLight=new Color(.48f,.43f,.38f);
+            var ground=GameObject.CreatePrimitive(PrimitiveType.Plane); ground.name="Ancient Persian ground";
+            ground.transform.localScale=new Vector3(4,1,3); ground.GetComponent<Renderer>().material=Mat(chapter.ground);
+            ground.transform.SetParent(environmentRoot,true);
+            var stone=Mat(new Color(.34f,.27f,.22f)); var dark=Mat(new Color(.13f,.12f,.13f));
+            var gold=Mat(new Color(.62f,.38f,.12f),.65f); var ember=Mat(new Color(.8f,.22f,.035f),.15f);
+            for(int i=0;i<7;i++){Pillar(-12+i*4,8,stone,gold); Pillar(-12+i*4,-9,dark,stone);}
+            Cube("Far fortress wall",new Vector3(0,2.1f,12),new Vector3(32,4.2f,1),dark);
+            Cube("Broken foreground wall",new Vector3(0,1.1f,-11),new Vector3(28,2.2f,.8f),stone);
+            // Chapter-specific landmarks, silhouettes and forge lights.
+            switch(GameRoot.Instance!=null?GameRoot.Instance.Chapter:0)
             {
-                float x=(i-4)*4.5f;
-                Cube("Ancient ruin",new Vector3(x,1.5f,7),new Vector3(1.2f,3,1.1f),stone);
-                Cube("Broken wall",new Vector3(x+.8f,.8f,-7),new Vector3(2.5f,1.6f,.8f),darkStone);
+                case 0:
+                    Cube("Forge hearth",new Vector3(-7,.7f,3),new Vector3(2.8f,1.4f,2),dark);
+                    for(int i=0;i<3;i++) Cube("Glowing forge coal",new Vector3(-7+i*.55f,1.48f,3),new Vector3(.4f,.16f,.5f),ember);
+                    break;
+                case 2:
+                case 8:
+                    for(int i=0;i<6;i++){Cube("Mountain ridge left",new Vector3(-16+i*2,3+i%2,13),new Vector3(3,6+i%3,4),dark);Cube("Mountain ridge right",new Vector3(16-i*2,3+(i+1)%2,13),new Vector3(3,6+(i+1)%3,4),dark);}
+                    break;
+                case 3:
+                case 6:
+                    for(int i=0;i<5;i++) Cube("Dungeon cell",new Vector3(-10+i*5,1.8f,5),new Vector3(.25f,3.6f,2.5f),gold);
+                    break;
+                case 7:
+                case 9:
+                    for(int i=0;i<4;i++){var serpent=GameObject.CreatePrimitive(PrimitiveType.Sphere);serpent.name="Serpent idol";serpent.transform.SetParent(environmentRoot,true);serpent.transform.position=new Vector3(-9+i*6,2,7);serpent.transform.localScale=new Vector3(1.1f,3.5f,.7f);serpent.GetComponent<Renderer>().material=Mat(new Color(.12f,.28f,.18f),.45f);}
+                    break;
             }
-            // Silhouette gate and scattered rocks give every chapter a readable play space.
-            Cube("Citadel gate left",new Vector3(-8,2.5f,5),new Vector3(1.2f,5,1.2f),darkStone);
-            Cube("Citadel gate right",new Vector3(8,2.5f,5),new Vector3(1.2f,5,1.2f),darkStone);
-            Cube("Citadel lintel",new Vector3(0,5,5),new Vector3(17,1,1.2f),stone);
-            for(int i=0;i<14;i++)
+            for(int i=0;i<10;i++)
             {
-                float x=Mathf.Sin(i*2.17f)*11f;
-                float z=Mathf.Cos(i*1.73f)*8f;
-                Cube("Scattered stone",new Vector3(x,.25f,z),new Vector3(.5f+((i%3)*.25f),.5f,.55f),stone);
+                float x=Mathf.Sin(i*2.17f)*13f, z=Mathf.Cos(i*1.73f)*9f;
+                Cube("Broken masonry",new Vector3(x,.2f,z),new Vector3(.55f+(i%3)*.2f,.4f,.65f),stone);
             }
-            var light=new GameObject("Warm key light").AddComponent<Light>();
-            light.type=LightType.Directional; light.intensity=1.15f;
+            var lightObject=new GameObject("Warm directional light"); lightObject.transform.SetParent(environmentRoot,true);
+            var light=lightObject.AddComponent<Light>(); light.type=LightType.Directional; light.intensity=1.25f;
             light.transform.rotation=Quaternion.Euler(48,-32,0);
-            light.transform.SetParent(environmentRoot,true);
-            var cam=Camera.main;
-            cam.transform.position=new Vector3(0,7,-12);
-            cam.transform.rotation=Quaternion.Euler(22,0,0);
-            var follow=cam.GetComponent<FollowCamera>();
-            if(follow==null) follow=cam.gameObject.AddComponent<FollowCamera>();
-            follow.Target=null;
+            var fire=new GameObject("Forge glow"); fire.transform.SetParent(environmentRoot,true); fire.transform.position=new Vector3(-7,2,3);
+            var glow=fire.AddComponent<Light>(); glow.type=LightType.Point; glow.color=new Color(1f,.32f,.08f); glow.range=9; glow.intensity=2.1f;
+            var cam=Camera.main; cam.transform.position=new Vector3(0,7,-12); cam.transform.rotation=Quaternion.Euler(22,0,0);
+            var follow=cam.GetComponent<FollowCamera>(); if(follow==null) follow=cam.gameObject.AddComponent<FollowCamera>(); follow.Target=null;
         }
         public static void SpawnActors(GameRoot root)
         {
-            var hero=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            hero.name="Kaveh"; hero.transform.position=new Vector3(-3,1,0);
-            hero.GetComponent<Renderer>().material=Mat(new Color(.55f,.19f,.09f));
+            var hero=new GameObject("Kaveh - Blacksmith Rebel"); hero.transform.position=new Vector3(-3,1,0);
             var cc=hero.AddComponent<CharacterController>(); cc.height=2; cc.radius=.45f;
-            var motor=hero.AddComponent<PlayerMotor>();
-            var hammer=GameObject.CreatePrimitive(PrimitiveType.Cube);
-            hammer.name="Kaveh's hammer"; hammer.transform.SetParent(hero.transform);
-            hammer.transform.localPosition=new Vector3(.55f,.15f,.25f); hammer.transform.localScale=new Vector3(.18f,.85f,.18f);
-            hammer.GetComponent<Renderer>().material=Mat(new Color(.32f,.30f,.28f));
-            var foe=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            foe.name=root.Current.enemyName; foe.transform.position=new Vector3(3,1,0);
-            foe.GetComponent<Renderer>().material=Mat(new Color(.20f,.35f,.24f));
+            hero.AddComponent<PlayerMotor>(); var art=hero.AddComponent<CharacterVisuals>(); art.IsHero=true;
+            var foe=new GameObject(root.Current.enemyName); foe.transform.position=new Vector3(3,1,0);
+            var enemyCollider=foe.AddComponent<CapsuleCollider>(); enemyCollider.height=2.4f; enemyCollider.radius=.55f;
             foe.transform.localScale=new Vector3(1.15f,1.25f,1.15f);
-            var brain=foe.AddComponent<EnemyBrain>();
-            root.RegisterActors(motor,brain);
+            var brain=foe.AddComponent<EnemyBrain>(); var enemyArt=foe.AddComponent<CharacterVisuals>(); enemyArt.IsBoss=true;
+            root.RegisterActors(hero.GetComponent<PlayerMotor>(),brain);
         }
     }
 }
