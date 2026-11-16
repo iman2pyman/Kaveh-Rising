@@ -46,11 +46,11 @@ namespace KavehRising
             else
             {
                 Part("War mask",PrimitiveType.Cube,new Vector3(0,.78f,.22f),new Vector3(.35f,.12f,.08f),bronze,transform);
-                Part("Crest",PrimitiveType.Cone,new Vector3(0,1.22f,0),new Vector3(.18f,.36f,.18f),bronze,transform);
+                Part("Crest",PrimitiveType.Cylinder,new Vector3(0,1.22f,0),new Vector3(.10f,.36f,.10f),bronze,transform);
                 if(IsBoss)
                 {
-                    Part("Demon left horn",PrimitiveType.Cone,new Vector3(-.25f,1.16f,0),new Vector3(.18f,.5f,.18f),bronze,transform).transform.localRotation=Quaternion.Euler(0,0,28);
-                    Part("Demon right horn",PrimitiveType.Cone,new Vector3(.25f,1.16f,0),new Vector3(.18f,.5f,.18f),bronze,transform).transform.localRotation=Quaternion.Euler(0,0,-28);
+                    Part("Demon left horn",PrimitiveType.Cylinder,new Vector3(-.25f,1.16f,0),new Vector3(.09f,.5f,.09f),bronze,transform).transform.localRotation=Quaternion.Euler(0,0,28);
+                    Part("Demon right horn",PrimitiveType.Cylinder,new Vector3(.25f,1.16f,0),new Vector3(.09f,.5f,.09f),bronze,transform).transform.localRotation=Quaternion.Euler(0,0,-28);
                     Part("Scale armor",PrimitiveType.Sphere,new Vector3(0,-.05f,-.22f),new Vector3(.9f,.72f,.22f),steel,transform);
                 }
             }
