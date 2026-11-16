@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.abs
 import kotlin.math.min
 
 class MainActivity : Activity() {
@@ -47,7 +46,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var bestScore = prefs.getInt("best_score", 0).coerceAtLeast(0)
     private var playerX = prefs.getFloat("player_x", 0.22f).coerceIn(.08f, .92f)
     private var enemyX = prefs.getFloat("enemy_x", 0.78f).coerceIn(.08f, .92f)
-    private var health = prefs.getInt("health", 3).coerceIn(0, 3)
+    private var health = prefs.getInt("health", GameRules.PLAYER_MAX_HEALTH).coerceIn(0, GameRules.PLAYER_MAX_HEALTH)
     private var enemyHealth = prefs.getInt("enemy_health", ChapterData.chapters[chapterIndex].enemyHealth)
         .coerceIn(0, ChapterData.chapters[chapterIndex].enemyHealth)
     private var enemyTurnCount = prefs.getInt("enemy_turn_count", 0).coerceAtLeast(0)
@@ -213,7 +212,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun enemyStepInterval(): Long {
         // Later chapters steadily increase pressure, with a fair lower bound.
-        return (1650L - chapterIndex * 90L).coerceAtLeast(1200L)
+        return GameRules.enemyStepInterval(chapterIndex)
     }
 
     private fun updateEnemy() {
@@ -221,15 +220,15 @@ private class KavehGameView(private val host: Activity) : View(host) {
         if (now - lastEnemyStep < enemyStepInterval()) return
         lastEnemyStep = now
         enemyTurnCount++
-        val specialStrike = chapterIndex >= 2 && enemyTurnCount % 3 == 0
-        if (abs(enemyX - playerX) < .19f) {
+        val specialStrike = GameRules.isSpecialEnemyStrike(chapterIndex, enemyTurnCount)
+        if (GameRules.isInRange(enemyX, playerX, GameRules.ENEMY_CONTACT_RANGE)) {
             if (now < dodgeActiveUntil) {
                 message = if (specialStrike) "جاخالی عالی! حمله ویژه دشمن خنثی شد" else "جاخالی موفق! ضربه دشمن بی‌اثر شد"
                 messageUntil = now + 1300L
             } else {
                 val damage = if (specialStrike) 2 else 1
                 val previousHealth = health
-                health = (health - damage).coerceAtLeast(0)
+                health = GameRules.applyDamage(health, damage)
                 playerDamageFlashUntil = now + 260L
                 message = if (specialStrike) "حمله ویژه دشمن! دو واحد سلامتی از دست دادی" else "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
                 messageUntil = now + 1500L
@@ -301,7 +300,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
 
         // Telegraph an incoming enemy strike so players can react with dodge.
-        val enemyIsClose = abs(enemyX - playerX) < .19f
+        val enemyIsClose = GameRules.isInRange(enemyX, playerX, GameRules.ENEMY_CONTACT_RANGE)
         val enemyStepProgress = now - lastEnemyStep
         val enemyInterval = enemyStepInterval()
         if (!paused && !storyIntro && !gameOver && !won &&
@@ -595,8 +594,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
             return
         }
         // A short invulnerability window rewards timing without making combat trivial.
-        dodgeActiveUntil = now + 650L
-        dodgeCooldownUntil = now + 1800L
+        dodgeActiveUntil = now + GameRules.DODGE_INVULNERABILITY_MS
+        dodgeCooldownUntil = now + GameRules.DODGE_COOLDOWN_MS
         saveGameState()
         playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)
         message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"
@@ -612,12 +611,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
             messageUntil = now + 1000L
             return
         }
-        heavyAttackReadyAt = now + 8000L
+        heavyAttackReadyAt = now + GameRules.HEAVY_ATTACK_COOLDOWN_MS
         saveGameState()
         heavyAttackEffectUntil = now + 420L
-        heavyAttackEffectHit = abs(enemyX - playerX) < .30f
+        heavyAttackEffectHit = GameRules.isInRange(enemyX, playerX, GameRules.HEAVY_ATTACK_RANGE)
         if (heavyAttackEffectHit) {
-            enemyHealth = (enemyHealth - 3).coerceAtLeast(0)
+            enemyHealth = GameRules.applyDamage(enemyHealth, GameRules.HEAVY_ATTACK_DAMAGE)
             message = "ضربه سنگین کاوه! سه واحد آسیب"
             messageUntil = now + 1400L
             if (enemyHealth == 0) finishEnemy(now)
@@ -629,7 +628,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun finishEnemy(now: Long) {
-        val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
+        val chapterReward = GameRules.chapterReward(ChapterData.chapters[chapterIndex].enemyHealth)
         score += chapterReward
         if (score > bestScore) bestScore = score
         prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
@@ -641,12 +640,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private fun attack() {
         val now = System.currentTimeMillis()
         if (won || gameOver || paused || storyIntro) return
-        if (now - hitCooldown < 600L) return
+        if (now - hitCooldown < GameRules.NORMAL_ATTACK_COOLDOWN_MS) return
         hitCooldown = now
         attackEffectUntil = now + 240L
-        attackEffectHit = abs(enemyX - playerX) < .23f
+        attackEffectHit = GameRules.isInRange(enemyX, playerX, GameRules.NORMAL_ATTACK_RANGE)
         if (attackEffectHit) {
-            enemyHealth--
+            enemyHealth = GameRules.applyDamage(enemyHealth, GameRules.NORMAL_ATTACK_DAMAGE)
             message = "ضربه کاوه!"
             messageUntil = now + 1100L
             if (enemyHealth == 0) finishEnemy(now)
@@ -660,7 +659,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private fun resetCombat() {
         playerX = .22f
         enemyX = .78f
-        health = 3
+        health = GameRules.PLAYER_MAX_HEALTH
         enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
         enemyTurnCount = 0
         hitCooldown = 0L
