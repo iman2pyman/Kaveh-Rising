@@ -28,7 +28,7 @@ func _probe() -> void:
 		_dump_tree(root, 0)
 		var player := _find_animation_player(root)
 		if player:
-			print("ANIMATION_NAMES=", player.get_animation_list())
+			print("ANIMATION_ROOT=", player.root_node)\n\t\t\tprint("ANIMATION_NAMES=", player.get_animation_list())\n\t\t\tif player.get_animation_list().size() > 0:\n\t\t\t\tvar sample := player.get_animation(player.get_animation_list()[0])\n\t\t\t\tif sample.get_track_count() > 0:\n\t\t\t\t\tprint("SAMPLE_TRACK=", sample.track_get_path(0))
 		else:
 			push_error("ANIMATION_PLAYER_MISSING: " + file)
 		root.free()
