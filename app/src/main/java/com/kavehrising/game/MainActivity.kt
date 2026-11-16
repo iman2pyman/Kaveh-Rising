@@ -21,7 +21,8 @@ class MainActivity : Activity() {
 
 private class KavehGameView : View {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var chapterIndex = 0\n    private var playerX = 0.22f
+    private var chapterIndex = 0
+    private var playerX = 0.22f
     private var enemyX = 0.78f
     private var health = 3
     private var enemyHealth = ChapterData.chapters[0].enemyHealth
@@ -75,7 +76,7 @@ private class KavehGameView : View {
             postInvalidateDelayed(80)
         }
         if (gameOver) drawOverlay(canvas, w, h, "کاوه شکست خورد", "برای شروع دوباره لمس کن")
-        if (won) drawOverlay(canvas, w, h, "پیروزی کاوه!", "راه قیام مردم آغاز شد\nبرای بازی دوباره لمس کن")
+        if (won) drawOverlay(canvas, w, h, "پیروزی کاوه!", if (chapterIndex < ChapterData.chapters.lastIndex) "مرحله بعد: " + ChapterData.chapters[chapterIndex + 1].titleFa + "\nبرای ادامه لمس کن" else "درفش کاویانی برافراشته شد!\nبرای شروع دوباره لمس کن")
     }
 
     private fun drawHud(canvas: Canvas, w: Float, h: Float) {
