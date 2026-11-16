@@ -363,6 +363,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val h = height.toFloat()
         if (paused) {
             paused = false
+            // Restart the enemy cadence so resuming never causes an immediate hit.
+            lastEnemyStep = System.currentTimeMillis()
             invalidate()
             return true
         }
@@ -373,6 +375,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
             paused = true
+            // Keep combat timing consistent while the game is paused.
+            lastEnemyStep = System.currentTimeMillis()
             invalidate()
             return true
         }
