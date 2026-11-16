@@ -26,6 +26,12 @@ class MainActivity : Activity() {
         if (::gameView.isInitialized) gameView.saveGameState()
         super.onPause()
     }
+
+    @Deprecated("Deprecated in Android API 33; retained for compatibility with older devices")
+    override fun onBackPressed() {
+        if (::gameView.isInitialized && gameView.pauseFromBack()) return
+        super.onBackPressed()
+    }
 }
 
 private class KavehGameView(private val host: Activity) : View(host) {
@@ -52,6 +58,14 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var won = prefs.getBoolean("won", false)
     private var message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
     private var messageUntil = System.currentTimeMillis() + 4000L
+
+    fun pauseFromBack(): Boolean {
+        if (storyIntro || gameOver || won || paused) return false
+        paused = true
+        lastEnemyStep = System.currentTimeMillis()
+        invalidate()
+        return true
+    }
 
     fun saveGameState() {
         prefs.edit()
