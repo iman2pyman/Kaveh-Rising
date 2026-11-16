@@ -4,6 +4,7 @@ namespace KavehRising
 {
     public static class RuntimeWorld
     {
+        static Transform environmentRoot;
         static Material Mat(Color c)
         {
             var m=new Material(Shader.Find("Standard"));
@@ -13,16 +14,22 @@ namespace KavehRising
         {
             var o=GameObject.CreatePrimitive(PrimitiveType.Cube);
             o.name=name; o.transform.position=pos; o.transform.localScale=scale;
-            o.GetComponent<Renderer>().material=mat; return o;
+            o.GetComponent<Renderer>().material=mat;
+            if(environmentRoot!=null) o.transform.SetParent(environmentRoot,true);
+            return o;
         }
         public static void BuildEnvironment(ChapterData chapter)
         {
+            if(environmentRoot!=null) Object.Destroy(environmentRoot.gameObject);
+            environmentRoot=new GameObject("Chapter Environment").transform;
             RenderSettings.skybox=null;
+            if(Camera.main==null) throw new System.Exception("Main Camera was not created by Bootstrap.");
             Camera.main.backgroundColor=chapter.sky;
             RenderSettings.ambientLight=new Color(.48f,.43f,.38f);
             var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.name="Persian landscape"; floor.transform.localScale=new Vector3(3,1,2);
             floor.GetComponent<Renderer>().material=Mat(chapter.ground);
+            floor.transform.SetParent(environmentRoot,true);
             var stone=Mat(new Color(.34f,.27f,.22f));
             for(int i=0;i<9;i++)
             {
@@ -33,6 +40,7 @@ namespace KavehRising
             var light=new GameObject("Warm key light").AddComponent<Light>();
             light.type=LightType.Directional; light.intensity=1.15f;
             light.transform.rotation=Quaternion.Euler(48,-32,0);
+            light.transform.SetParent(environmentRoot,true);
             var cam=Camera.main;
             cam.transform.position=new Vector3(0,7,-12);
             cam.transform.rotation=Quaternion.Euler(22,0,0);

@@ -107,6 +107,7 @@ namespace KavehRising
             HasPotion = true; EnemyHealth = Current.enemyHealth;
             if (Player != null) Destroy(Player.gameObject);
             if (Enemy != null) Destroy(Enemy.gameObject);
+            RuntimeWorld.BuildEnvironment(Current);
             RuntimeWorld.SpawnActors(this);
             SaveProgress();
         }
