@@ -29,6 +29,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var health = 3
     private var enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
     private var hitCooldown = 0L
+    private var dodgeCooldownUntil = 0L
+    private var dodgeActiveUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
     private var gameOver = false
     private var won = false
@@ -203,7 +205,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         return true
     }
 
-    private fun attack() {
+    private fun dodge() {\n        val now = System.currentTimeMillis()\n        if (now < dodgeCooldownUntil) {\n            message = "جاخالی هنوز آماده نیست"\n            messageUntil = now + 900L\n            return\n        }\n        // A short invulnerability window rewards timing without making combat trivial.\n        dodgeActiveUntil = now + 650L\n        dodgeCooldownUntil = now + 1800L\n        playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)\n        message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"\n        messageUntil = now + 1200L\n    }\n\n    private fun attack() {
         val now = System.currentTimeMillis()
         if (now - hitCooldown < 600L) return
         hitCooldown = now
