@@ -27,11 +27,11 @@ namespace KavehRising
         }
         AudioClip Load(string name){return Resources.Load<AudioClip>("Audio/SFX/"+name);}
         void Play(AudioClip clip,float volume=1f){if(clip&&source)source.PlayOneShot(clip,volume);}
-        public void PlayHit(bool isHeavy){Play(isHeavy?heavyHit:lightHit,isHeavy?.95f:.72f);}
+        public void PlayHit(bool isHeavy){Play(isHeavy?heavyHit:lightHit,isHeavy ? .95f : .72f);}
         public void PlayHurt(){Play(hurt,.8f);}
         public void PlayVictory(){Play(victory,.85f);}
-        public void PlaySwing(bool isHeavy){Play(swing,isHeavy?.9f:.58f);}
-        public void PlayFootstep(bool crouching){Play(crouching?grassStep:stoneStep,crouching?.22f:.42f);}
+        public void PlaySwing(bool isHeavy){Play(swing,isHeavy ? .9f : .58f);}
+        public void PlayFootstep(bool crouching){Play(crouching?grassStep:stoneStep,crouching ? .22f : .42f);}
         public void PlayForge(){Play(forge,.65f);}
         public void PlayDoor(){Play(door,.8f);}
         public void PlayObjective(){Play(metal,.6f);}

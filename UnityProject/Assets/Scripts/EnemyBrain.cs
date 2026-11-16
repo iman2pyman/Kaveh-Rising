@@ -48,7 +48,7 @@ namespace KavehRising
             else if(Time.time>=nextStrike)
             {
                 nextStrike=Time.time+1.8f;
-                if(animationDriver)animationDriver.PlayAttack(false);
+                var audio=FindObjectOfType<GameAudio>();if(audio)audio.PlaySwing(false);\n                if(animationDriver)animationDriver.PlayAttack(false);
                 if(rigAnimation)rigAnimation.PlayAttack(false);
                 StartCoroutine(StrikePlayer(root));
             }

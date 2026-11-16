@@ -3,7 +3,7 @@ using UnityEngine;
 namespace KavehRising {
  [RequireComponent(typeof(CharacterController))]
  public class PlayerMotor:MonoBehaviour {
-  CharacterController body; float moveX,moveZ,verticalVelocity,nextAttack,dodgeUntil,nextDodge;
+  CharacterController body; float moveX,moveZ,verticalVelocity,nextAttack,dodgeUntil,nextDodge,nextFootstep;
   Vector3 dodgeDirection=Vector3.right; bool crouching; HumanoidAnimationDriver animationDriver; RiggedCharacterAnimation rigAnimation; CharacterVisuals visuals;
   public bool IsDodging=>Time.time<dodgeUntil; public bool IsCrouching=>crouching; public float MoveAmount{get;private set;}
   void Awake(){body=GetComponent<CharacterController>();animationDriver=GetComponentInChildren<HumanoidAnimationDriver>();rigAnimation=GetComponent<RiggedCharacterAnimation>();visuals=GetComponent<CharacterVisuals>();}
@@ -18,7 +18,7 @@ namespace KavehRising {
    if(body.isGrounded&&verticalVelocity<0)verticalVelocity=-2f;verticalVelocity+=Physics.gravity.y*Time.deltaTime;
    body.Move((planar+Vector3.up*verticalVelocity)*Time.deltaTime);
    if(direction.sqrMagnitude>.01f)transform.forward=direction.normalized;
-   MoveAmount=planar.magnitude/4.2f;if(animationDriver)animationDriver.SetLocomotion(MoveAmount,crouching,body.isGrounded);if(rigAnimation)rigAnimation.SetLocomotion(MoveAmount,crouching);
+   MoveAmount=planar.magnitude/4.2f;\n   if(MoveAmount>.1f&&body.isGrounded&&Time.time>=nextFootstep){nextFootstep=Time.time+(crouching ? .62f : .4f);var stepAudio=FindObjectOfType<GameAudio>();if(stepAudio)stepAudio.PlayFootstep(crouching);}\n   if(animationDriver)animationDriver.SetLocomotion(MoveAmount,crouching,body.isGrounded);if(rigAnimation)rigAnimation.SetLocomotion(MoveAmount,crouching);
    moveX=moveZ=0;
   }
   public void Dodge(){
@@ -29,7 +29,7 @@ namespace KavehRising {
   public void PlayHit(){if(animationDriver)animationDriver.PlayHit();if(rigAnimation)rigAnimation.PlayHit();}
   public void Attack(bool heavy){
    var root=GameRoot.Instance;if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory||Time.time<nextAttack)return;
-   nextAttack=Time.time+(heavy?1.25f:.48f);
+   nextAttack=Time.time+(heavy?1.25f:.48f);var swingAudio=FindObjectOfType<GameAudio>();if(swingAudio)swingAudio.PlaySwing(heavy);
    if(animationDriver)animationDriver.PlayAttack(heavy);if(rigAnimation)rigAnimation.PlayAttack(heavy);if(visuals)visuals.PlayAttack(heavy);
    StartCoroutine(ResolveAttack(heavy));
   }

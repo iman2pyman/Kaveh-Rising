@@ -29,7 +29,7 @@ namespace KavehRising {
    if(IsComplete||!root)return false;ObjectiveTarget candidate=null;float nearest=2.8f;
    foreach(var t in root.GetComponentsInChildren<ObjectiveTarget>()){float d=Vector3.Distance(actor.position,t.transform.position);if(!t.Done&&d<nearest){nearest=d;candidate=t;}}
    if(!candidate)return false;string label=candidate.Label;candidate.Complete();done++;
-   if(GameRoot.Instance){GameRoot.Instance.SetNotice(label+" — انجام شد");GameRoot.Instance.CheckChapterCompletion();}return true;
+   var audio=FindObjectOfType<GameAudio>();if(audio){if(chapter==0)audio.PlayForge();else if(chapter==3)audio.PlayDoor();else audio.PlayObjective();}\n   if(GameRoot.Instance){GameRoot.Instance.SetNotice(label+" — انجام شد");GameRoot.Instance.CheckChapterCompletion();}return true;
   }
   void OnDestroy(){if(Instance==this)Instance=null;}
  }
