@@ -20,6 +20,8 @@ var rescued := 0
 var rescued_this_chapter := 0
 var chapter := 0
 var wave := 1
+var wave_transition_pending := false
+var chapter_generation := 0
 var saved_chapter := 0
 var sfx_streams: Dictionary = {}
 var sfx_pool: Array[AudioStreamPlayer] = []
@@ -650,6 +652,8 @@ func _resume() -> void:
 	_begin_chapter(saved_chapter)
 
 func _begin_chapter(index: int) -> void:
+	chapter_generation += 1
+	wave_transition_pending = false
 	chapter = clampi(index,0,Chapters.chapter_count()-1)
 	wave = 1
 	rescued_this_chapter = 0
@@ -675,6 +679,7 @@ func _begin_chapter(index: int) -> void:
 	_spawn_wave()
 
 func _spawn_wave() -> void:
+	wave_transition_pending = false
 	_clear_enemies()
 	var data: Dictionary = Chapters.get_chapter(chapter)
 	var count := int(data.count) + (1 if wave > 1 else 0)
@@ -961,7 +966,7 @@ func _update_enemies(delta: float) -> void:
 					part.rotation.x = sin(phase)*0.18
 				elif part is Node3D and str(part.name).begins_with("leg"):
 					part.rotation.x = sin(phase+PI)*0.14
-	if enemies.is_empty() and active and not ended:
+	if enemies.is_empty() and active and not ended and not wave_transition_pending:
 		_wave_cleared()
 
 func _attack() -> void:
@@ -1084,12 +1089,19 @@ func _hit_effect(pos: Vector3) -> void:
 	tween.tween_callback(spark.queue_free)
 
 func _wave_cleared() -> void:
+	if wave_transition_pending or ended or not active:
+		return
+	wave_transition_pending = true
 	var data: Dictionary = Chapters.get_chapter(chapter)
 	if wave < int(data.waves):
 		wave += 1
 		objective.text = "%s  |  موج %d از %d" % [data.mission,wave,data.waves]
 		_show_message("موج بعدی دشمنان در راه است")
-		get_tree().create_timer(1.6).timeout.connect(_spawn_wave)
+		var generation := chapter_generation
+		get_tree().create_timer(1.6).timeout.connect(func():
+			if generation == chapter_generation and active and not ended:
+				_spawn_wave()
+		)
 	else:
 		_play_sfx("victory")
 		coins += int(data.reward)
