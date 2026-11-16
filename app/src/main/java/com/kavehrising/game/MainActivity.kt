@@ -47,6 +47,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         .coerceIn(0, ChapterData.chapters[chapterIndex].enemyHealth)
     private var enemyTurnCount = prefs.getInt("enemy_turn_count", 0).coerceAtLeast(0)
     private var hitCooldown = 0L
+    private var heavyAttackReadyAt = prefs.getLong("heavy_attack_ready_at", 0L)
+    private var heavyAttackEffectUntil = 0L
+    private var heavyAttackEffectHit = false
     private var attackEffectUntil = 0L
     private var attackEffectHit = false
     private var dodgeCooldownUntil = 0L
@@ -94,6 +97,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         drawCharacter(canvas, w * playerX, h * .69f, true)
         drawEnemy(canvas, w * enemyX, h * .69f)
         drawAttackEffect(canvas, w, h)
+        drawHeavyAttackEffect(canvas, w, h)
         drawControls(canvas, w, h)
 
         if (!gameOver && !won && !paused) {
@@ -313,6 +317,20 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.style = Paint.Style.FILL
     }
 
+    private fun drawHeavyAttackEffect(canvas: Canvas, w: Float, h: Float) {
+        val now = System.currentTimeMillis()
+        if (now >= heavyAttackEffectUntil) return
+        val progress = 1f - ((heavyAttackEffectUntil - now) / 420f).coerceIn(0f, 1f)
+        val centerX = w * playerX + if (enemyX >= playerX) w * .07f else -w * .07f
+        val centerY = h * .69f - h * .08f
+        val radius = min(w, h) * (.13f + progress * .08f)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = min(w, h) * .018f
+        paint.color = if (heavyAttackEffectHit) Color.rgb(255, 225, 105) else Color.rgb(185, 145, 105)
+        canvas.drawCircle(centerX, centerY, radius, paint)
+        paint.style = Paint.Style.FILL
+    }
+
     private fun drawEnemy(canvas: Canvas, x: Float, ground: Float) {
         drawCharacter(canvas, x, ground, false)
         val headY = ground - height * .12f
@@ -368,7 +386,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val now = System.currentTimeMillis()
         val dodgeLabel = if (now < dodgeCooldownUntil) "جاخالی…" else "جاخالی"
         drawButton(canvas, RectF(w * .51f, h * .84f, w * .72f, h * .96f), dodgeLabel)
-        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), "⚒ حمله")
+        val heavyLabel = if (now < heavyAttackReadyAt) "سنگین…" else "ضربه سنگین"
+        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), heavyLabel)
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
@@ -476,7 +495,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 event.x < w * .26f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
                 event.x < w * .50f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
                 event.x < w * .73f -> dodge()
-                else -> attack()
+                else -> heavyAttack()
             }
         } else {
             playerX = (playerX + if (event.x > w / 2) .05f else -.05f).coerceIn(.08f, .92f)
@@ -519,6 +538,37 @@ private class KavehGameView(private val host: Activity) : View(host) {
         saveGameState()
     }
 
+    private fun heavyAttack() {
+        val now = System.currentTimeMillis()
+        if (now < heavyAttackReadyAt) {
+            message = "ضربه سنگین هنوز آماده نیست"
+            messageUntil = now + 1000L
+            return
+        }
+        heavyAttackReadyAt = now + 8000L
+        prefs.edit().putLong("heavy_attack_ready_at", heavyAttackReadyAt).apply()
+        heavyAttackEffectUntil = now + 420L
+        heavyAttackEffectHit = abs(enemyX - playerX) < .30f
+        if (heavyAttackEffectHit) {
+            enemyHealth = (enemyHealth - 3).coerceAtLeast(0)
+            message = "ضربه سنگین کاوه! سه واحد آسیب"
+            messageUntil = now + 1400L
+            if (enemyHealth == 0) {
+                val chapterReward = ChapterData.chapters[chapterIndex].enemyHealth * 100
+                score += chapterReward
+                if (score > bestScore) bestScore = score
+                prefs.edit().putInt("score", score).putInt("best_score", bestScore).apply()
+                message = "پیروزی! $chapterReward امتیاز دریافت کردی"
+                messageUntil = now + 1800L
+                won = true
+            }
+            saveGameState()
+        } else {
+            message = "ضربه سنگین به هدف نرسید؛ به دشمن نزدیک‌تر شو"
+            messageUntil = now + 1300L
+        }
+    }
+
     private fun attack() {
         val now = System.currentTimeMillis()
         if (now - hitCooldown < 600L) return
@@ -538,7 +588,6 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 messageUntil = now + 1800L
                 won = true
             }
-            // Persist enemy health and victory immediately after a successful hit.
             saveGameState()
         } else {
             message = "به دشمن نزدیک‌تر شو"
