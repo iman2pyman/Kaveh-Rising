@@ -165,7 +165,7 @@ namespace KavehRising.Editor
         {
             foreach(var t in root.GetComponentsInChildren<Transform>(true))
                 foreach(var name in names)
-                    if(t.name.Replace(" ","").Replace(".","").Replace(":","").ToLowerInvariant()==name.Replace("_","").ToLowerInvariant()) return t;
+                    if(t.name.Replace(" ","").Replace(".","").Replace(":","").Replace("_","").ToLowerInvariant()==name.Replace("_","").ToLowerInvariant()) return t;
             return null;
         }
         static void RemoveCollider(GameObject go){var collider=go.GetComponent<Collider>();if(collider)Object.DestroyImmediate(collider);}
