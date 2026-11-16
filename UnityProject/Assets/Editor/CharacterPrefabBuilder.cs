@@ -86,6 +86,7 @@ namespace KavehRising.Editor
             var material = new Material(shader) { name = name, color = tint };
             if (texture) material.mainTexture = texture;
             material.SetFloat("_Metallic", .18f); material.SetFloat("_Glossiness", .32f);
+            System.IO.Directory.CreateDirectory("Assets/Art/Materials");
             string path = "Assets/Art/Materials/" + name.Replace(" ", "_") + ".mat";
             var old = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (old) { old.CopyPropertiesFromMaterial(material); Object.DestroyImmediate(material); return old; }
