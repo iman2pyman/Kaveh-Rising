@@ -12,10 +12,10 @@ namespace KavehRising
         void Awake()
         {
             animationPlayer = GetComponent<Animation>();
-            upperArmL = FindBone("upperarm_l"); upperArmR = FindBone("upperarm_r");
-            thighL = FindBone("thigh_l"); thighR = FindBone("thigh_r");
-            calfL = FindBone("calf_l"); calfR = FindBone("calf_r");
-            spine = FindBone("spine_02");
+            upperArmL = FindBone("upperarm_l","leftarm","leftupperarm"); upperArmR = FindBone("upperarm_r","rightarm","rightupperarm");
+            thighL = FindBone("thigh_l","leftupleg","leftupperleg"); thighR = FindBone("thigh_r","rightupleg","rightupperleg");
+            calfL = FindBone("calf_l","leftleg","leftlowerleg"); calfR = FindBone("calf_r","rightleg","rightlowerleg");
+            spine = FindBone("spine_02","spine2","chest","spine");
             LoadImportedAnimations();
             BuildClip("Idle", true, new Motion(spine,0,new[]{0f,1f,0f}));
             BuildClip("Walk", true, new Motion(thighL,0,new[]{-25f,25f,-25f}),new Motion(thighR,0,new[]{25f,-25f,25f}),new Motion(upperArmL,0,new[]{22f,-22f,22f}),new Motion(upperArmR,0,new[]{-22f,22f,-22f}));
@@ -65,10 +65,11 @@ namespace KavehRising
             public Transform bone; public int axis; public float[] values;
             public Motion(Transform b,int a,float[] v){bone=b;axis=a;values=v;}
         }
-        Transform FindBone(string token)
+        Transform FindBone(params string[] tokens)
         {
             foreach(var t in GetComponentsInChildren<Transform>(true))
-                if(t.name.ToLowerInvariant()==token)return t;
+                foreach(var token in tokens)
+                    if(t.name.Replace(" ","").Replace(".","").Replace(":","").ToLowerInvariant()==token.Replace("_","").ToLowerInvariant())return t;
             return null;
         }
         string Path(Transform target)

@@ -87,6 +87,7 @@ namespace KavehRising
         {
             if (IsPaused || IsGameOver || IsVictory) return;
             Health = Mathf.Max(0, Health - amount);
+            if (Player) Player.PlayHit();
             Notice = "کاوه آسیب دید!";
             if (Player) Player.PlayHit();
             var audio = FindObjectOfType<GameAudio>();
