@@ -186,9 +186,14 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
     }
 
+    private fun enemyStepInterval(): Long {
+        // Later chapters steadily increase pressure, with a fair lower bound.
+        return (1650L - chapterIndex * 90L).coerceAtLeast(1200L)
+    }
+
     private fun updateEnemy() {
         val now = System.currentTimeMillis()
-        if (now - lastEnemyStep < 1650L) return
+        if (now - lastEnemyStep < enemyStepInterval()) return
         lastEnemyStep = now
         if (abs(enemyX - playerX) < .19f) {
             if (now < dodgeActiveUntil) {
@@ -253,8 +258,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         // Telegraph an incoming enemy strike so players can react with dodge.
         val enemyIsClose = abs(enemyX - playerX) < .19f
         val enemyStepProgress = now - lastEnemyStep
+        val enemyInterval = enemyStepInterval()
         if (!paused && !storyIntro && !gameOver && !won &&
-            enemyIsClose && enemyStepProgress in 1050L..1649L) {
+            enemyIsClose && enemyStepProgress in (enemyInterval - 600L)..(enemyInterval - 1L)) {
             paint.color = Color.rgb(255, 105, 75)
             paint.textSize = min(w, h) * .032f
             canvas.drawText("هشدار: نگهبان آماده ضربه است؛ جاخالی بده!", w / 2, h * .33f, paint)
