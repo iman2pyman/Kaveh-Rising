@@ -76,6 +76,25 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: Zahhak's serpent heads were not created")
 		quit(13)
 		return
+	game.set("coins",100)
+	var damage_before := float(game.get("attack_damage"))
+	game.call("_open_upgrade_menu")
+	if not paused:
+		push_error("SMOKE_FAIL: upgrade workshop did not pause gameplay")
+		quit(16)
+		return
+	var upgrade_panel := game.get("upgrade_panel") as PanelContainer
+	var hammer_upgrade := upgrade_panel.get_child(0).get_child(2) as Button
+	hammer_upgrade.emit_signal("pressed")
+	if float(game.get("attack_damage")) != damage_before+8.0:
+		push_error("SMOKE_FAIL: hammer upgrade did not increase player damage")
+		quit(17)
+		return
+	game.call("_close_upgrade_menu")
+	if paused:
+		push_error("SMOKE_FAIL: closing upgrade workshop did not resume gameplay")
+		quit(18)
+		return
 	hero_anim.play("Movement/Running_A")
 	game.call("_toggle_pause")
 	if not paused:
