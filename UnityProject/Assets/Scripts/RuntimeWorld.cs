@@ -16,6 +16,12 @@ namespace KavehRising
             o.transform.position=pos; o.transform.localScale=scale; o.GetComponent<Renderer>().material=mat;
             o.transform.SetParent(environmentRoot,true); return o;
         }
+
+        static void Boundary(string name,Vector3 position,Vector3 size)
+        {
+            var wall=new GameObject(name); wall.transform.SetParent(environmentRoot,true); wall.transform.position=position;
+            var box=wall.AddComponent<BoxCollider>(); box.size=size;
+        }
         static void Pillar(float x,float z,Material stone,Material trim)
         {
             Cube("Carved column",new Vector3(x,1.7f,z),new Vector3(.85f,3.4f,.85f),stone);
@@ -32,14 +38,22 @@ namespace KavehRising
             var ground=GameObject.CreatePrimitive(PrimitiveType.Plane); ground.name="Ancient Persian ground";
             ground.transform.localScale=new Vector3(4,1,3); ground.GetComponent<Renderer>().material=Mat(chapter.ground);
             ground.transform.SetParent(environmentRoot,true);
+            Boundary("Arena north boundary",new Vector3(0,2,14.5f),new Vector3(40,4,.5f));
+            Boundary("Arena south boundary",new Vector3(0,2,-14.5f),new Vector3(40,4,.5f));
+            Boundary("Arena west boundary",new Vector3(-19.5f,2,0),new Vector3(.5f,4,30));
+            Boundary("Arena east boundary",new Vector3(19.5f,2,0),new Vector3(.5f,4,30));
             var stone=Mat(new Color(.34f,.27f,.22f)); var dark=Mat(new Color(.13f,.12f,.13f));
             var gold=Mat(new Color(.62f,.38f,.12f),.65f); var ember=Mat(new Color(.8f,.22f,.035f),.15f);
+            Cube("Ancient stone pathway",new Vector3(0,.06f,0),new Vector3(24,.12f,3.2f),stone);
             for(int i=0;i<7;i++){Pillar(-12+i*4,8,stone,gold); Pillar(-12+i*4,-9,dark,stone);}
             Cube("Far fortress wall",new Vector3(0,2.1f,12),new Vector3(32,4.2f,1),dark);
             Cube("Broken foreground wall",new Vector3(0,1.1f,-11),new Vector3(28,2.2f,.8f),stone);
             // Chapter-specific landmarks, silhouettes and forge lights.
             switch(GameRoot.Instance!=null?GameRoot.Instance.Chapter:0)
             {
+                case 1:
+                    for(int i=0;i<4;i++){Cube("Oppressed villagers shelter",new Vector3(-11+i*7,.8f,5),new Vector3(2.2f,1.6f,2.4f),stone);Cube("Shelter roof",new Vector3(-11+i*7,1.8f,5),new Vector3(2.8f,.25f,2.8f),dark);}
+                    break;
                 case 0:
                     Cube("Forge hearth",new Vector3(-7,.7f,3),new Vector3(2.8f,1.4f,2),dark);
                     for(int i=0;i<3;i++) Cube("Glowing forge coal",new Vector3(-7+i*.55f,1.48f,3),new Vector3(.4f,.16f,.5f),ember);
@@ -51,6 +65,18 @@ namespace KavehRising
                 case 3:
                 case 6:
                     for(int i=0;i<5;i++) Cube("Dungeon cell",new Vector3(-10+i*5,1.8f,5),new Vector3(.25f,3.6f,2.5f),gold);
+                    break;
+                case 5:
+                    Cube("Banner pole",new Vector3(0,3.2f,4),new Vector3(.18f,6.4f,.18f),gold);
+                    Cube("Derafsh Kaviani cloth",new Vector3(1.25f,4.7f,4),new Vector3(2.5f,1.6f,.08f),ember);
+                    break;
+                case 6:
+                    for(int i=0;i<4;i++){var chain=GameObject.CreatePrimitive(PrimitiveType.Cylinder);chain.name="Dungeon chains";chain.transform.SetParent(environmentRoot,true);chain.transform.position=new Vector3(-9+i*6,1.6f,4);chain.transform.localScale=new Vector3(.08f,1.5f,.08f);chain.GetComponent<Renderer>().material=gold;}
+                    break;
+                case 8:
+                    Cube("Alborz beacon base",new Vector3(0,.7f,5),new Vector3(2,1.4f,2),stone);
+                    var beaconLight=new GameObject("Alborz beacon light");beaconLight.transform.SetParent(environmentRoot,true);beaconLight.transform.position=new Vector3(0,2.5f,5);
+                    var beacon=beaconLight.AddComponent<Light>();beacon.type=LightType.Point;beacon.color=new Color(1f,.48f,.12f);beacon.range=14;beacon.intensity=3.2f;
                     break;
                 case 7:
                 case 9:
