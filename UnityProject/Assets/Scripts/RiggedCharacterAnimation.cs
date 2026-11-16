@@ -30,21 +30,21 @@ namespace KavehRising
         }
         void LoadImportedAnimations()
         {
-            var clips=Resources.LoadAll<AnimationClip>("Animations");
+            var clips=Resources.LoadAll<AnimationClip>("Animations").Concat(Resources.LoadAll<AnimationClip>("Animations/Imported")).ToArray();
             foreach(var clip in clips)
             {
-                if(!clip || animationPlayer.GetClip(clip.name)!=null)continue;
+                if(!clip || !clip.legacy || animationPlayer.GetClip(clip.name)!=null)continue;
                 animationPlayer.AddClip(clip,clip.name);
             }
             RegisterExternal("Idle", "idle", "stand");
             RegisterExternal("Walk", "walk");
             RegisterExternal("Run", "run", "jog");
             RegisterExternal("Crouch", "crouch", "sneak");
-            RegisterExternal("Dodge", "dodge", "roll", "evade");
+            RegisterExternal("Dodge", "Dodge_Forward", "Dodge_Left", "dodge", "roll", "evade");
             RegisterExternal("Hit", "hit", "hurt", "damage");
             RegisterExternal("Death", "death", "die");
-            RegisterExternal("Attack", "attack", "melee", "slash", "swing");
-            RegisterExternal("HeavyAttack", "heavy", "combo", "strong");
+            RegisterExternal("Attack", "Melee_1H_Slash", "Melee_1H_Stab", "attack", "melee", "slash", "swing");
+            RegisterExternal("HeavyAttack", "Melee_2H_Slam", "Melee_2H_Attack", "heavy", "combo", "strong");
         }
         void RegisterExternal(string state,params string[] words)
         {

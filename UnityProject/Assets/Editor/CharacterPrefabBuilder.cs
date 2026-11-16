@@ -11,8 +11,7 @@ namespace KavehRising.Editor
         const string TexturePath = "Assets/Art/Characters/barbarian_texture.png";
         static readonly string[] AnimationSources =
         {
-            "Assets/Art/Animations/Rig_Large_MovementBasic.fbx",
-            "Assets/Art/Animations/Rig_Large_Special.fbx"
+            "Assets/Art/Animations/Rig_Large_MovementBasic.fbx"
         };
         const string ResourceRoot = "Assets/Resources";
 
@@ -57,7 +56,7 @@ namespace KavehRising.Editor
         {
             foreach (var source in AnimationSources)
             {
-                if (!File.Exists(source)) throw new System.Exception("Missing animation FBX: " + source);
+                if (!File.Exists(source)) { Debug.LogWarning("Optional animation set not present: " + source); continue; }
                 string destination = ResourceRoot + "/Animations/" + Path.GetFileName(source);
                 if (!File.Exists(destination)) AssetDatabase.CopyAsset(source, destination);
                 var importer = AssetImporter.GetAtPath(destination) as ModelImporter;
@@ -69,6 +68,25 @@ namespace KavehRising.Editor
                 importer.importLights = false;
                 importer.animationCompression = ModelImporterAnimationCompression.Off;
                 importer.SaveAndReimport();
+            }
+            ImportGltfAnimationClips();
+        }
+        static void ImportGltfAnimationClips()
+        {
+            Directory.CreateDirectory(ResourceRoot + "/Animations/Imported");
+            AssetDatabase.Refresh();
+            var files=Directory.GetFiles(ResourceRoot + "/Animations","*.glb");
+            foreach(var file in files)
+            {
+                string assetPath=file.Replace("\\","/");
+                foreach(var clip in AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<AnimationClip>())
+                {
+                    if(!clip || clip.name.IndexOf("T-Pose",System.StringComparison.OrdinalIgnoreCase)>=0)continue;
+                    string output=ResourceRoot + "/Animations/Imported/" + clip.name + ".anim";
+                    if(AssetDatabase.LoadAssetAtPath<AnimationClip>(output))continue;
+                    var copy=Object.Instantiate(clip);copy.name=clip.name;copy.legacy=true;copy.wrapMode=WrapMode.Once;
+                    AssetDatabase.CreateAsset(copy,output);
+                }
             }
         }
         static Material MakeMaterial(string name, Texture2D texture, Color tint)
