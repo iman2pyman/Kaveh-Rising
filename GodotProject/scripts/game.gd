@@ -34,6 +34,7 @@ var footstep_clock := 0.0
 var active := false
 var ended := false
 var attack_cd := 0.0
+var hero_anim_lock := 0.0
 var dodge_cd := 0.0
 var invulnerable := 0.0
 var message_cd := 0.0
@@ -69,6 +70,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	attack_cd = maxf(0.0, attack_cd - delta)
+	hero_anim_lock = maxf(0.0,hero_anim_lock-delta)
 	dodge_cd = maxf(0.0, dodge_cd - delta)
 	invulnerable = maxf(0.0, invulnerable - delta)
 	message_cd = maxf(0.0, message_cd - delta)
@@ -890,6 +892,7 @@ func _spawn_enemy(kind: String, pos: Vector3) -> void:
 	enemy.set_meta("power",power)
 	enemy.set_meta("speed",speed)
 	enemy.set_meta("cooldown",randf_range(0.4,1.3))
+	enemy.set_meta("anim_lock",0.0)
 	enemy.set_meta("phase",randf()*TAU)
 	add_child(enemy)
 	enemies.append(enemy)
@@ -902,6 +905,8 @@ func _update_enemies(delta: float) -> void:
 		var offset: Vector3 = player.global_position-enemy.global_position
 		offset.y = 0
 		var distance: float = offset.length()
+		var enemy_anim_lock: float = maxf(0.0,float(enemy.get_meta("anim_lock",0.0))-delta)
+		enemy.set_meta("anim_lock",enemy_anim_lock)
 		var enemy_speed: float = float(enemy.get_meta("speed"))
 		var enemy_power: float = float(enemy.get_meta("power"))
 		var reach: float = 2.2 if enemy.get_meta("kind") == "boss" else 1.6
@@ -924,18 +929,22 @@ func _update_enemies(delta: float) -> void:
 					_show_message("ضحاک خشمگین‌تر شده است!")
 					_play_sfx("metal")
 		if distance > reach:
-			_play_anim(enemy,"Movement/Running_A")
+			if enemy_anim_lock <= 0.0:
+				_play_anim(enemy,"Movement/Running_A")
 			var dir: Vector3 = offset.normalized()
 			enemy.velocity.x = dir.x*enemy_speed
 			enemy.velocity.z = dir.z*enemy_speed
 			enemy.rotation.y = atan2(-dir.x,-dir.z)
 		else:
-			_play_anim(enemy,"General/Idle_A")
+			if enemy_anim_lock <= 0.0:
+				_play_anim(enemy,"General/Idle_A")
 			enemy.velocity.x = 0
 			enemy.velocity.z = 0
 			var cd := float(enemy.get_meta("cooldown"))-delta
 			if cd <= 0:
 				cd = randf_range(1.0,1.6)
+				_play_anim(enemy,"Combat/Melee_1H_Attack_Chop")
+				enemy.set_meta("anim_lock",0.62)
 				if invulnerable <= 0:
 					_take_damage(enemy_power)
 			enemy.set_meta("cooldown",cd)
@@ -959,6 +968,7 @@ func _attack() -> void:
 	if not active or ended or attack_cd > 0:
 		return
 	attack_cd = 0.42
+	hero_anim_lock = 0.62
 	_play_anim(player,"Combat/Melee_1H_Attack_Chop")
 	_play_sfx("swing")
 	hammer.rotation.x = -1.0
@@ -991,6 +1001,7 @@ func _dodge() -> void:
 	if not active or ended or dodge_cd > 0 or stamina < 25:
 		return
 	dodge_cd = 1.15
+	hero_anim_lock = 0.58
 	_play_anim(player,"Advanced/Dodge_Backward")
 	_play_sfx("armor")
 	stamina -= 25
@@ -1039,6 +1050,7 @@ func _take_damage(amount: float) -> void:
 	if invulnerable > 0:
 		return
 	health = maxf(0,health-amount)
+	hero_anim_lock = 0.48
 	_play_anim(player,"General/Hit_A")
 	_play_sfx("armor")
 	hp_bar.value = health
@@ -1156,7 +1168,7 @@ func _animate_hero(delta: float) -> void:
 	if not is_instance_valid(hero_visual):
 		return
 	var moving := Vector2(player.velocity.x,player.velocity.z).length() > 0.5
-	if attack_cd <= 0.2:
+	if hero_anim_lock <= 0.0:
 		_play_anim(player,"Movement/Running_A" if moving else "General/Idle_A")
 	if not hero_parts.is_empty():
 		var phase := float(hero_visual.get_meta("phase",0.0))+delta*(9 if moving else 2)
