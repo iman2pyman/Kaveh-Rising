@@ -327,7 +327,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
             invalidate()
             return true
         }
-        if (event.y < h * .13f && event.x < w * .20f && !storyIntro && !gameOver && !won) {\n            usePotion()\n            invalidate()\n            return true\n        }\n        if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
+        if (event.y < h * .13f && event.x < w * .20f && !storyIntro && !gameOver && !won) {
+            usePotion()
+            invalidate()
+            return true
+        }
+        if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
             paused = true
             invalidate()
             return true
@@ -367,7 +372,21 @@ private class KavehGameView(private val host: Activity) : View(host) {
         return true
     }
 
-    private fun usePotion() {\n        val now = System.currentTimeMillis()\n        if (potionUsed) {\n            message = "معجون این فصل مصرف شده است"\n        } else if (health >= 3) {\n            message = "سلامتی کاوه کامل است"\n        } else {\n            health = (health + 1).coerceAtMost(3)\n            potionUsed = true\n            message = "معجون درمانی مصرف شد؛ یک واحد سلامتی بازیابی شد"\n        }\n        messageUntil = now + 1400L\n    }\n\n    private fun dodge() {
+    private fun usePotion() {
+        val now = System.currentTimeMillis()
+        if (potionUsed) {
+            message = "معجون این فصل مصرف شده است"
+        } else if (health >= 3) {
+            message = "سلامتی کاوه کامل است"
+        } else {
+            health = (health + 1).coerceAtMost(3)
+            potionUsed = true
+            message = "معجون درمانی مصرف شد؛ یک واحد سلامتی بازیابی شد"
+        }
+        messageUntil = now + 1400L
+    }
+
+    private fun dodge() {
         val now = System.currentTimeMillis()
         if (now < dodgeCooldownUntil) {
             message = "جاخالی هنوز آماده نیست"
