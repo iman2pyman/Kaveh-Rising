@@ -306,6 +306,47 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun drawEnemy(canvas: Canvas, x: Float, ground: Float) {
         drawCharacter(canvas, x, ground, false)
+        val headY = ground - height * .12f
+        val scale = height * .01f
+
+        // Give every chapter's opponent a recognizable silhouette.
+        when (chapterIndex) {
+            0, 1 -> { // soldiers: a simple metal helmet and shield
+                paint.color = Color.rgb(190, 175, 145)
+                canvas.drawRect(x - scale * 3.5f, headY - scale * 3f, x + scale * 3.5f, headY - scale * 1.5f, paint)
+                paint.color = Color.rgb(135, 85, 45)
+                canvas.drawOval(RectF(x + width * .035f, ground - height * .09f, x + width * .085f, ground - height * .015f), paint)
+            }
+            2 -> { // mountain demon: horned head and broad shoulders
+                paint.color = Color.rgb(75, 105, 91)
+                canvas.drawCircle(x, headY, height * .052f, paint)
+                paint.strokeWidth = scale * 5f
+                canvas.drawLine(x - scale * 3f, headY - scale * 2f, x - scale * 8f, headY - scale * 10f, paint)
+                canvas.drawLine(x + scale * 3f, headY - scale * 2f, x + scale * 8f, headY - scale * 10f, paint)
+            }
+            3 -> { // dungeon keeper: iron mask and heavy chains
+                paint.color = Color.rgb(165, 155, 145)
+                canvas.drawRect(x - scale * 4f, headY - scale * 2f, x + scale * 4f, headY + scale * 2f, paint)
+                paint.strokeWidth = scale * 2f
+                canvas.drawLine(x - width * .045f, ground - height * .02f, x - width * .075f, ground + height * .025f, paint)
+                canvas.drawLine(x + width * .045f, ground - height * .02f, x + width * .075f, ground + height * .025f, paint)
+            }
+            4 -> { // commander: raised crest and dark cloak
+                paint.color = Color.rgb(75, 25, 22)
+                canvas.drawOval(RectF(x - width * .065f, ground - height * .09f, x + width * .065f, ground + height * .015f), paint)
+                paint.color = Color.rgb(220, 170, 65)
+                canvas.drawPath(android.graphics.Path().apply {\n                    moveTo(x, headY - scale * 9f)\n                    lineTo(x - scale * 4f, headY)\n                    lineTo(x + scale * 4f, headY)\n                    close()\n                }, paint)
+            }
+            else -> { // Zahhak: royal crown and two serpent-like necks
+                paint.color = Color.rgb(225, 175, 55)
+                canvas.drawRect(x - scale * 5f, headY - scale * 7f, x + scale * 5f, headY - scale * 3f, paint)
+                canvas.drawLine(x - width * .025f, ground - height * .06f, x - width * .065f, ground - height * .12f, paint)
+                canvas.drawLine(x + width * .025f, ground - height * .06f, x + width * .065f, ground - height * .12f, paint)
+                paint.color = Color.rgb(65, 125, 75)
+                canvas.drawCircle(x - width * .065f, ground - height * .12f, scale * 3f, paint)
+                canvas.drawCircle(x + width * .065f, ground - height * .12f, scale * 3f, paint)
+            }
+        }
         paint.color = Color.rgb(245, 220, 195)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = height * .032f
