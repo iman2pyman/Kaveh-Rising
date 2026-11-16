@@ -37,7 +37,10 @@ jobs:
             SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
           fi
           test -x "$SDKMANAGER"
+          # sdkmanager may close the pipe after accepting all licenses; ignore yes(1)'s SIGPIPE only.
+          set +o pipefail
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null
+          set -o pipefail
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Download Godot 4.7.2 and matching export templates
