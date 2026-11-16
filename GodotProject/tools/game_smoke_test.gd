@@ -55,6 +55,16 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: campaign data is not ten chapters and seventeen waves")
 		quit(19)
 		return
+	game.call("_begin_chapter",1)
+	game.call("_clear_enemies")
+	game.call("_wave_cleared")
+	var wave_after_first_clear := int(game.get("wave"))
+	game.call("_wave_cleared")
+	if wave_after_first_clear != 2 or int(game.get("wave")) != 2:
+		push_error("SMOKE_FAIL: repeated empty frames advanced the wave more than once")
+		quit(22)
+		return
+	game.call("_begin_chapter",0)
 	for chapter_index in range(Chapters.chapter_count()):
 		game.call("_begin_chapter",chapter_index)
 		await process_frame
@@ -128,6 +138,6 @@ func _run_test() -> void:
 		return
 	for i in range(20):
 		await process_frame
-	print("SMOKE_OK: all 10 chapters / 17 waves, rigged characters, animation sets, SFX, prisoner rescue, Zahhak boss, upgrades and pause menu verified")
+	print("SMOKE_OK: all 10 chapters / 17 waves, guarded wave transitions, rigged characters, animation sets, SFX, prisoner rescue, Zahhak boss, upgrades and pause menu verified")
 	game.queue_free()
 	quit(0)
