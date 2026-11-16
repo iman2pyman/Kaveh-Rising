@@ -2,6 +2,12 @@ name: Unity Android APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "UnityProject/**"
+      - ".github/workflows/unity-android.yml"
 
 permissions:
   contents: read
@@ -14,6 +20,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify Unity license secret
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "::error::Missing UNITY_LICENSE repository secret. Add a valid Unity license XML in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Build with Unity
         uses: game-ci/unity-builder@v4
         env:
@@ -23,13 +38,14 @@ jobs:
         with:
           projectPath: UnityProject
           targetPlatform: Android
-          buildMethod: KavehRising.Editor.BuildAndroid.Build
+          buildMethod: KavehRising.Editor.BuildAndroid.BuildFromCommandLine
+          customParameters: -buildOutput Build/KavehRising.apk
           unityVersion: 2022.3.62f1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KAVEH-RISING-Unity-Android
+          name: KAVEH-RISING-Android-APK
           path: UnityProject/Build/KavehRising.apk
           if-no-files-found: error
           retention-days: 14
