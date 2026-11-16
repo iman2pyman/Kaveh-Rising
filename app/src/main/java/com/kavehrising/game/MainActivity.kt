@@ -82,6 +82,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             .putInt("health", health)
             .putInt("enemy_health", enemyHealth)
             .putInt("enemy_turn_count", enemyTurnCount)
+            .putLong("heavy_attack_ready_at", heavyAttackReadyAt)
             .putBoolean("story_intro", storyIntro)
             .putBoolean("potion_used", potionUsed)
             .putBoolean("game_over", gameOver)
@@ -590,7 +591,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             return
         }
         heavyAttackReadyAt = now + 8000L
-        prefs.edit().putLong("heavy_attack_ready_at", heavyAttackReadyAt).apply()
+        saveGameState()
         heavyAttackEffectUntil = now + 420L
         heavyAttackEffectHit = abs(enemyX - playerX) < .30f
         if (heavyAttackEffectHit) {
