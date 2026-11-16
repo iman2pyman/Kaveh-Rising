@@ -68,16 +68,80 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawWorld(canvas: Canvas, w: Float, h: Float) {
-        canvas.drawColor(Color.rgb(29, 16, 12))
-        paint.color = Color.rgb(58, 37, 28)
+        // Each chapter gets a distinct palette and a simple landmark silhouette.
+        val sky = when (chapterIndex) {
+            0 -> Color.rgb(39, 17, 10)       // forge
+            1 -> Color.rgb(32, 22, 19)       // crowded streets
+            2 -> Color.rgb(18, 29, 39)       // mountain pass
+            3 -> Color.rgb(20, 15, 25)       // dungeon
+            4 -> Color.rgb(38, 20, 17)       // uprising
+            else -> Color.rgb(24, 18, 35)     // palace
+        }
+        val ridge = when (chapterIndex) {
+            2 -> Color.rgb(54, 73, 88)
+            3 -> Color.rgb(45, 35, 55)
+            5 -> Color.rgb(67, 42, 58)
+            else -> Color.rgb(58, 37, 28)
+        }
+        val groundColor = when (chapterIndex) {
+            2 -> Color.rgb(76, 83, 85)
+            3 -> Color.rgb(58, 48, 62)
+            4 -> Color.rgb(105, 48, 29)
+            5 -> Color.rgb(82, 42, 35)
+            else -> Color.rgb(111, 58, 28)
+        }
+        canvas.drawColor(sky)
+        paint.color = ridge
         canvas.drawOval(RectF(-w * .2f, h * .28f, w * .55f, h * .68f), paint)
         canvas.drawOval(RectF(w * .35f, h * .22f, w * 1.2f, h * .67f), paint)
-        paint.color = Color.rgb(111, 58, 28)
+        paint.color = groundColor
         canvas.drawRect(0f, h * .69f, w, h * .82f, paint)
         paint.color = Color.rgb(45, 28, 20)
         canvas.drawRect(0f, h * .82f, w, h, paint)
-        paint.color = Color.argb(55, 255, 130, 30)
+        paint.color = Color.argb(if (chapterIndex == 0) 90 else 45, 255, if (chapterIndex == 2) 190 else 130, 30)
         canvas.drawCircle(w * .5f, h * .66f, min(w, h) * .16f, paint)
+
+        when (chapterIndex) {
+            2 -> { // jagged mountain ridge
+                paint.color = Color.rgb(35, 48, 61)
+                val peaks = android.graphics.Path().apply {
+                    moveTo(0f, h * .55f)
+                    lineTo(w * .18f, h * .30f)
+                    lineTo(w * .32f, h * .48f)
+                    lineTo(w * .52f, h * .24f)
+                    lineTo(w * .72f, h * .46f)
+                    lineTo(w * .88f, h * .32f)
+                    lineTo(w, h * .53f)
+                    lineTo(w, h * .69f)
+                    lineTo(0f, h * .69f)
+                    close()
+                }
+                canvas.drawPath(peaks, paint)
+            }
+            3 -> { // dungeon bars
+                paint.color = Color.rgb(95, 82, 103)
+                paint.strokeWidth = w * .012f
+                for (i in 1..7) canvas.drawLine(w * i / 8f, h * .25f, w * i / 8f, h * .69f, paint)
+                canvas.drawLine(w * .08f, h * .42f, w * .92f, h * .42f, paint)
+            }
+            4 -> { // distant city silhouettes
+                paint.color = Color.rgb(55, 30, 25)
+                for (i in 0..6) {
+                    val x = w * i / 7f
+                    val buildingWidth = w * .12f
+                    val top = h * (.48f + (i % 3) * .035f)
+                    canvas.drawRect(x, top, x + buildingWidth, h * .69f, paint)
+                }
+            }
+            5 -> { // palace towers
+                paint.color = Color.rgb(65, 35, 48)
+                canvas.drawRect(w * .12f, h * .35f, w * .25f, h * .69f, paint)
+                canvas.drawRect(w * .75f, h * .35f, w * .88f, h * .69f, paint)
+                canvas.drawRect(w * .30f, h * .45f, w * .70f, h * .69f, paint)
+                canvas.drawCircle(w * .185f, h * .35f, w * .065f, paint)
+                canvas.drawCircle(w * .815f, h * .35f, w * .065f, paint)
+            }
+        }
     }
 
     private fun updateEnemy() {
