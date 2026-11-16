@@ -1,15 +1,19 @@
 # KAVEH RISING | قیام کاوه
 
-An Android action-adventure game inspired by the Persian epic of Kaveh the Blacksmith and Zahhak.
+A lightweight, Persian-first Android action game inspired by the legend of Kaveh the Blacksmith and Zahhak.
 
-## Project status
+## Game
 
-The repository is being initialized as a native Android project. The narrative direction includes the forge, the oppressed people's uprising, the mountain passage, Zahhak's dungeon, the rescue of prisoners, and the raising of the Kaviani banner. Mythological creatures are part of the selected game direction.
+- Six chapters: the forge, the people's cry, the mountain pass, Zahhak's dungeon, the uprising, and the Kaviani banner.
+- Simple native Canvas graphics with no external art/audio assets and no added runtime libraries.
+- Touch controls for movement, dodge, normal attack, and heavy attack.
+- Three player health points, one healing potion per attempt, chapter enemies, score, and saved record.
+- Local progress and combat cooldowns are saved. Leaving the app during combat pauses the fight safely.
 
 ## Build
 
-Open the repository in Android Studio with a compatible Android SDK and Gradle installation. The project configuration and source will be added in stages.
+Open the project in Android Studio with Android SDK 35 and JDK 17. The project uses Android Gradle Plugin 8.7.3 and Kotlin 2.0.21.
 
-## Language
+## Language and orientation
 
-Persian-first interface; project documentation may include English.
+The game interface is Persian-first and the game is locked to landscape orientation for its five-button combat layout.
