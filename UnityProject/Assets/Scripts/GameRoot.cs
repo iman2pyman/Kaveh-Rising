@@ -94,6 +94,7 @@ namespace KavehRising
             if (Player) Player.PlayHit();
             Notice = "کاوه آسیب دید!";
             if (Player) Player.PlayHit();
+            if (Player) Player.PlayHit();
             var audio = FindObjectOfType<GameAudio>();
             if (audio) audio.PlayHurt();
             if (Health == 0) { IsGameOver = true; Notice = "شکست؛ دوباره تلاش کن"; }
@@ -181,7 +182,7 @@ namespace KavehRising
             GUI.Box(new Rect(10,10,Screen.width*.66f,112),"");
             GUI.color = Color.white;
             GUI.Label(new Rect(24,13,Screen.width*.63f,28),$"قیام کاوه | فصل {Chapter+1}/10 | {Current.title} | امتیاز {Score}");
-            GUI.Label(new Rect(24,42,Screen.width*.6f,26),$"سلامتی {Health}/5     دشمن {EnemyHealth}/{Current.enemyHealth}");
+            GUI.Label(new Rect(24,42,Screen.width*.6f,26),$"سلامتی {Health}/5     دشمن {EnemyHealth}/{Current.enemyHealth+(Chapter==9?WaveIndex*2:WaveIndex)}     موج {WaveIndex+1}/{WaveCount}");
             GUI.Label(new Rect(24,68,Screen.width*.63f,26),Current.objective);
             GUI.Label(new Rect(24,91,Screen.width*.63f,22),MissionTask);
             float bw=Screen.width*.105f, bh=Screen.height*.14f, y=Screen.height-bh-14;
