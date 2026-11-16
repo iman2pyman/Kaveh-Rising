@@ -58,17 +58,18 @@ jobs:
           GODOT_BIN="$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
           test -f "$GODOT_BIN"
           chmod +x "$GODOT_BIN"
-          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
           echo "Godot executable prepared at $GODOT_BIN"
+          "$GODOT_BIN" --version
 
       - name: Import and validate project
         run: |
-          godot --headless --editor --path GodotProject --quit
+          "$GODOT_BIN" --headless --editor --path GodotProject --quit
 
       - name: Export Android debug APK
         run: |
           mkdir -p GodotProject/build
-          godot --headless --path GodotProject --export-debug "Android" GodotProject/build/KAVEH-RISING-debug.apk
+          "$GODOT_BIN" --headless --path GodotProject --export-debug "Android" GodotProject/build/KAVEH-RISING-debug.apk
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
