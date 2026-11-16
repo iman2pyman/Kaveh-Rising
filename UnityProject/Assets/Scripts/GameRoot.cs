@@ -25,7 +25,7 @@ namespace KavehRising
         public bool HasPotion{get;private set;}=true; public string Notice{get;private set;}="برای حرکت از دکمه‌ها استفاده کن";
         public PlayerMotor Player{get;private set;} public EnemyBrain Enemy{get;private set;}
         MissionDirector missions;
-        MissionDirector missions;
+        
         void Awake()
         {
             if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}
@@ -62,7 +62,7 @@ namespace KavehRising
             {
                 if(Enemy!=null){CombatEffects.Burst(Enemy.transform.position+Vector3.up, new Color(1f,.55f,.12f),40);Enemy.MarkDead();}
                 Score+=100+Chapter*25; UnlockedChapter=Mathf.Max(UnlockedChapter,Mathf.Min(Chapter+1,Chapters.Length-1));
-                IsVictory=true; Notice=Chapter==Chapters.Length-1?"ضحاک شکست خورد؛ ایران آزاد شد!":"پیروزی! فصل بعد آماده است";
+                CheckChapterCompletion();
                 var audio=FindObjectOfType<GameAudio>(); if(audio)audio.PlayVictory();
             }
             SaveProgress();
