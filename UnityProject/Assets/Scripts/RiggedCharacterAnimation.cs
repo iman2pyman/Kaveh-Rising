@@ -12,10 +12,10 @@ namespace KavehRising
         void Awake()
         {
             animationPlayer = GetComponent<Animation>();
-            upperArmL = FindBone("upperarm_l","leftarm","leftupperarm"); upperArmR = FindBone("upperarm_r","rightarm","rightupperarm");
-            thighL = FindBone("thigh_l","leftupleg","leftupperleg"); thighR = FindBone("thigh_r","rightupleg","rightupperleg");
-            calfL = FindBone("calf_l","leftleg","leftlowerleg"); calfR = FindBone("calf_r","rightleg","rightlowerleg");
-            spine = FindBone("spine_02","spine2","chest","spine");
+            upperArmL = FindBone("upperarm.l","upperarm_l","leftarm","leftupperarm"); upperArmR = FindBone("upperarm.r","upperarm_r","rightarm","rightupperarm");
+            thighL = FindBone("upperleg.l","thigh.l","thigh_l","leftupleg","leftupperleg"); thighR = FindBone("upperleg.r","thigh.r","thigh_r","rightupleg","rightupperleg");
+            calfL = FindBone("lowerleg.l","calf.l","calf_l","leftleg","leftlowerleg"); calfR = FindBone("lowerleg.r","calf.r","calf_r","rightleg","rightlowerleg");
+            spine = FindBone("chest","spine_02","spine2","spine");
             LoadImportedAnimations();
             BuildClip("Idle", true, new Motion(spine,0,new[]{0f,1f,0f}));
             BuildClip("Walk", true, new Motion(thighL,0,new[]{-25f,25f,-25f}),new Motion(thighR,0,new[]{25f,-25f,25f}),new Motion(upperArmL,0,new[]{22f,-22f,22f}),new Motion(upperArmR,0,new[]{-22f,22f,-22f}));

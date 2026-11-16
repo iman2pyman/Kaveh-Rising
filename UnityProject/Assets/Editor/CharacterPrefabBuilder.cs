@@ -54,14 +54,28 @@ namespace KavehRising.Editor
         static int ImportAndCountAnimations()
         {
             AssetDatabase.Refresh();
+            System.IO.Directory.CreateDirectory("Assets/Resources/Animations/Imported");
             int total = 0;
             foreach (var path in AnimationPaths)
             {
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-                var clips = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().ToArray();
-                if (clips.Length == 0) throw new System.Exception("glTFast imported no animation clips from " + path);
-                total += clips.Length;
+                var clips = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>()
+                    .Where(c => c && c.name.IndexOf("T-Pose",System.StringComparison.OrdinalIgnoreCase)<0).ToArray();
+                if (clips.Length == 0) throw new System.Exception("glTFast imported no usable animation clips from " + path);
+                foreach (var clip in clips)
+                {
+                    total++;
+                    string output = "Assets/Resources/Animations/Imported/" + clip.name + ".anim";
+                    if (AssetDatabase.LoadAssetAtPath<AnimationClip>(output)) continue;
+                    var copy = Object.Instantiate(clip);
+                    copy.name = clip.name;
+                    copy.legacy = true;
+                    copy.wrapMode = WrapMode.Once;
+                    AssetDatabase.CreateAsset(copy, output);
+                }
             }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
             if (total < 20) throw new System.Exception("Animation import incomplete: only " + total + " clips found.");
             return total;
         }
