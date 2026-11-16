@@ -78,10 +78,15 @@ private class KavehGameView(private val host: Activity) : View(host) {
         if (now - lastEnemyStep < 1650L) return
         lastEnemyStep = now
         if (abs(enemyX - playerX) < .19f) {
-            health--
-            message = "نگهبان ضربه زد؛ جاخالی بده!"
-            messageUntil = now + 1400L
-            if (health <= 0) gameOver = true
+            if (now < dodgeActiveUntil) {
+                message = "جاخالی موفق! ضربه دشمن بی‌اثر شد"
+                messageUntil = now + 1100L
+            } else {
+                health--
+                message = "نگهبان ضربه زد؛ زمان‌بندی جاخالی را بهتر کن"
+                messageUntil = now + 1400L
+                if (health <= 0) gameOver = true
+            }
         } else {
             enemyX += if (playerX > enemyX) .045f else -.045f
             enemyX = enemyX.coerceIn(.08f, .92f)
@@ -151,9 +156,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawControls(canvas: Canvas, w: Float, h: Float) {
-        drawButton(canvas, RectF(w * .06f, h * .84f, w * .32f, h * .96f), "◀")
-        drawButton(canvas, RectF(w * .36f, h * .84f, w * .62f, h * .96f), "▶")
-        drawButton(canvas, RectF(w * .68f, h * .84f, w * .94f, h * .96f), "⚒ حمله")
+        drawButton(canvas, RectF(w * .03f, h * .84f, w * .25f, h * .96f), "◀")
+        drawButton(canvas, RectF(w * .27f, h * .84f, w * .49f, h * .96f), "▶")
+        val now = System.currentTimeMillis()
+        val dodgeLabel = if (now < dodgeCooldownUntil) "جاخالی…" else "جاخالی"
+        drawButton(canvas, RectF(w * .51f, h * .84f, w * .72f, h * .96f), dodgeLabel)
+        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), "⚒ حمله")
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
@@ -194,8 +202,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         if (event.y > h * .82f) {
             when {
-                event.x < w * .34f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
-                event.x < w * .65f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
+                event.x < w * .26f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
+                event.x < w * .50f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
+                event.x < w * .73f -> dodge()
                 else -> attack()
             }
         } else {
@@ -205,7 +214,22 @@ private class KavehGameView(private val host: Activity) : View(host) {
         return true
     }
 
-    private fun dodge() {\n        val now = System.currentTimeMillis()\n        if (now < dodgeCooldownUntil) {\n            message = "جاخالی هنوز آماده نیست"\n            messageUntil = now + 900L\n            return\n        }\n        // A short invulnerability window rewards timing without making combat trivial.\n        dodgeActiveUntil = now + 650L\n        dodgeCooldownUntil = now + 1800L\n        playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)\n        message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"\n        messageUntil = now + 1200L\n    }\n\n    private fun attack() {
+    private fun dodge() {
+        val now = System.currentTimeMillis()
+        if (now < dodgeCooldownUntil) {
+            message = "جاخالی هنوز آماده نیست"
+            messageUntil = now + 900L
+            return
+        }
+        // A short invulnerability window rewards timing without making combat trivial.
+        dodgeActiveUntil = now + 650L
+        dodgeCooldownUntil = now + 1800L
+        playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)
+        message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"
+        messageUntil = now + 1200L
+    }
+
+    private fun attack() {
         val now = System.currentTimeMillis()
         if (now - hitCooldown < 600L) return
         hitCooldown = now
@@ -226,6 +250,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         health = 3
         enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
         hitCooldown = 0L
+        dodgeCooldownUntil = 0L
+        dodgeActiveUntil = 0L
         lastEnemyStep = System.currentTimeMillis()
         gameOver = false
         won = false
