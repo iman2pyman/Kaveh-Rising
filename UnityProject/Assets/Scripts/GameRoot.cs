@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace KavehRising
@@ -33,6 +34,8 @@ namespace KavehRising
         public int Health { get; private set; } = 5;
         public int Score { get; private set; }
         public int EnemyHealth { get; private set; }
+        public int WaveIndex { get; private set; }
+        public int WaveCount { get; private set; }
         public bool IsPaused { get; private set; }
         public bool IsGameOver { get; private set; }
         public bool IsVictory { get; private set; }
@@ -104,9 +107,22 @@ namespace KavehRising
             {
                 CombatEffects.Burst(Enemy.transform.position + Vector3.up, new Color(1f,.55f,.12f), 40);
                 Enemy.MarkDead();
-                CheckChapterCompletion();
+                if (WaveIndex + 1 < WaveCount) StartCoroutine(SpawnNextWave());
+                else CheckChapterCompletion();
             }
             SaveProgress();
+        }
+
+        IEnumerator SpawnNextWave()
+        {
+            Notice = "موج بعدی دشمنان در راه است";
+            yield return new WaitForSeconds(1.7f);
+            while (IsPaused && !IsGameOver) yield return null;
+            if (IsGameOver || IsVictory) yield break;
+            WaveIndex++;
+            EnemyHealth = Current.enemyHealth + (Chapter == 9 ? WaveIndex * 2 : WaveIndex);
+            RuntimeWorld.SpawnEnemy(this, WaveIndex);
+            Notice = "موج " + (WaveIndex + 1) + "/" + WaveCount;
         }
 
         public void UsePotion()
@@ -125,13 +141,13 @@ namespace KavehRising
             else Chapter = Mathf.Min(UnlockedChapter, Chapter + 1);
             StartChapter(true);
         }
-        public void Retry() { StartChapter(false); }
+        public void Retry() { StartChapter(true); }
 
         void StartChapter(bool resetHealth)
         {
             IsPaused = false; IsGameOver = false; IsVictory = false; chapterRewarded = false;
             if (resetHealth) Health = 5;
-            HasPotion = true; EnemyHealth = Current.enemyHealth;
+            HasPotion = true; WaveIndex = 0; WaveCount = new[]{1,2,1,2,2,1,2,2,1,3}[Chapter]; EnemyHealth = Current.enemyHealth;
             if (Player) Destroy(Player.gameObject);
             if (Enemy) Destroy(Enemy.gameObject);
             RuntimeWorld.BuildEnvironment(Current);

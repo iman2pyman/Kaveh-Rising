@@ -114,25 +114,35 @@ namespace KavehRising
                 var controller=hero.AddComponent<CharacterController>();controller.height=2;controller.radius=.45f;
                 hero.AddComponent<PlayerMotor>();var visuals=hero.AddComponent<CharacterVisuals>();visuals.IsHero=true;
             }
+            root.RegisterActors(hero.GetComponent<PlayerMotor>(),null);
+            SpawnEnemy(root,0);
+        }
 
-            var enemyPrefab=Resources.Load<GameObject>("Characters/DahhakHumanoid");
+        public static void SpawnEnemy(GameRoot root,int wave)
+        {
+            var prefab=Resources.Load<GameObject>("Characters/DahhakHumanoid");
+            Vector3[] points={new Vector3(4,0,0),new Vector3(1,0,6),new Vector3(5,0,-6)};
+            Vector3 spawn=points[Mathf.Clamp(wave,0,points.Length-1)];
             GameObject enemy;
-            if(enemyPrefab)
+            if(prefab)
             {
-                enemy=Object.Instantiate(enemyPrefab,new Vector3(4,0,0),Quaternion.identity);
-                enemy.name=root.Current.enemyName;
-                enemy.transform.localScale=Vector3.one*(root.Chapter==9?1.22f:1.05f);
+                enemy=Object.Instantiate(prefab,spawn,Quaternion.identity);
+                enemy.name=root.Current.enemyName+(wave>0?" - "+(wave+1):"");
+                float scale=root.Chapter==9?1.22f+wave*.08f:1.05f+wave*.035f;
+                enemy.transform.localScale=Vector3.one*scale;
                 var collider=enemy.GetComponent<CapsuleCollider>();if(!collider)collider=enemy.AddComponent<CapsuleCollider>();
                 collider.height=2.1f;collider.radius=.42f;collider.center=new Vector3(0,1.05f,0);
-                if(!enemy.GetComponent<EnemyBrain>())enemy.AddComponent<EnemyBrain>();
+                foreach(var renderer in enemy.GetComponentsInChildren<Renderer>())
+                    renderer.material.color=Color.Lerp(renderer.material.color,new Color(.38f,.08f,.1f),wave*.12f);
             }
             else
             {
-                enemy=new GameObject(root.Current.enemyName);enemy.transform.position=new Vector3(4,1,0);
+                enemy=new GameObject(root.Current.enemyName);enemy.transform.position=spawn+Vector3.up;
                 var collider=enemy.AddComponent<CapsuleCollider>();collider.height=2.4f;collider.radius=.55f;
-                enemy.AddComponent<EnemyBrain>();var visuals=enemy.AddComponent<CharacterVisuals>();visuals.IsBoss=true;
+                var visuals=enemy.AddComponent<CharacterVisuals>();visuals.IsBoss=true;
             }
-            root.RegisterActors(hero.GetComponent<PlayerMotor>(),enemy.GetComponent<EnemyBrain>());
+            var brain=enemy.GetComponent<EnemyBrain>();if(!brain)brain=enemy.AddComponent<EnemyBrain>();
+            root.RegisterEnemy(brain);
         }
     }
 }
