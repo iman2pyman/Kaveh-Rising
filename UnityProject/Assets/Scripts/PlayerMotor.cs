@@ -18,7 +18,9 @@ namespace KavehRising {
    if(body.isGrounded&&verticalVelocity<0)verticalVelocity=-2f;verticalVelocity+=Physics.gravity.y*Time.deltaTime;
    body.Move((planar+Vector3.up*verticalVelocity)*Time.deltaTime);
    if(direction.sqrMagnitude>.01f)transform.forward=direction.normalized;
-   MoveAmount=planar.magnitude/4.2f;\n   if(MoveAmount>.1f&&body.isGrounded&&Time.time>=nextFootstep){nextFootstep=Time.time+(crouching ? .62f : .4f);var stepAudio=FindObjectOfType<GameAudio>();if(stepAudio)stepAudio.PlayFootstep(crouching);}\n   if(animationDriver)animationDriver.SetLocomotion(MoveAmount,crouching,body.isGrounded);if(rigAnimation)rigAnimation.SetLocomotion(MoveAmount,crouching);
+   MoveAmount=planar.magnitude/4.2f;
+   if(MoveAmount>.1f&&body.isGrounded&&Time.time>=nextFootstep){nextFootstep=Time.time+(crouching ? .62f : .4f);var stepAudio=FindObjectOfType<GameAudio>();if(stepAudio)stepAudio.PlayFootstep(crouching);}
+   if(animationDriver)animationDriver.SetLocomotion(MoveAmount,crouching,body.isGrounded);if(rigAnimation)rigAnimation.SetLocomotion(MoveAmount,crouching);
    moveX=moveZ=0;
   }
   public void Dodge(){
