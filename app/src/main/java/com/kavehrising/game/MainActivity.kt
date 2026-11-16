@@ -29,6 +29,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var health = 3
     private var enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
     private var hitCooldown = 0L
+    private var attackEffectUntil = 0L
+    private var attackEffectHit = false
     private var dodgeCooldownUntil = 0L
     private var dodgeActiveUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
@@ -47,6 +49,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         drawHud(canvas, w, h)
         drawCharacter(canvas, w * playerX, h * .69f, true)
         drawEnemy(canvas, w * enemyX, h * .69f)
+        drawAttackEffect(canvas, w, h)
         drawControls(canvas, w, h)
 
         if (!gameOver && !won && !paused) {
@@ -150,6 +153,26 @@ private class KavehGameView(private val host: Activity) : View(host) {
             paint.color = Color.rgb(245, 190, 75)
             canvas.drawLine(x + width * .045f, ground - height * .03f, x + width * .09f, ground - height * .10f, paint)
         }
+    }
+
+    private fun drawAttackEffect(canvas: Canvas, w: Float, h: Float) {
+        val now = System.currentTimeMillis()
+        if (now >= attackEffectUntil) return
+        val progress = 1f - ((attackEffectUntil - now) / 240f).coerceIn(0f, 1f)
+        val centerX = w * playerX + if (enemyX >= playerX) w * .055f else -w * .055f
+        val centerY = h * .69f - h * .085f
+        val radius = min(w, h) * (.10f + progress * .035f)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = min(w, h) * .012f
+        paint.color = if (attackEffectHit) Color.rgb(255, 220, 95) else Color.rgb(210, 170, 115)
+        canvas.drawArc(
+            RectF(centerX - radius, centerY - radius, centerX + radius, centerY + radius),
+            if (enemyX >= playerX) 205f else -25f,
+            if (enemyX >= playerX) 125f else -125f,
+            false,
+            paint
+        )
+        paint.style = Paint.Style.FILL
     }
 
     private fun drawEnemy(canvas: Canvas, x: Float, ground: Float) {
@@ -286,7 +309,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val now = System.currentTimeMillis()
         if (now - hitCooldown < 600L) return
         hitCooldown = now
-        if (abs(enemyX - playerX) < .23f) {
+        attackEffectUntil = now + 240L
+        attackEffectHit = abs(enemyX - playerX) < .23f
+        if (attackEffectHit) {
             enemyHealth--
             message = "ضربه کاوه!"
             messageUntil = now + 1100L
@@ -303,6 +328,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         health = 3
         enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
         hitCooldown = 0L
+        attackEffectUntil = 0L
+        attackEffectHit = false
         dodgeCooldownUntil = 0L
         dodgeActiveUntil = 0L
         lastEnemyStep = System.currentTimeMillis()
