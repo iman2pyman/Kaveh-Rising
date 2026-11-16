@@ -168,6 +168,8 @@ namespace KavehRising
             float bw=Screen.width*.105f, bh=Screen.height*.14f, y=Screen.height-bh-14;
             if(GUI.RepeatButton(new Rect(12,y,bw,bh),"◀") && Player) Player.SetMove(-1);
             if(GUI.RepeatButton(new Rect(20+bw,y,bw,bh),"▶") && Player) Player.SetMove(1);
+            if(GUI.RepeatButton(new Rect(12,y-bh-8,bw,bh),"▲") && Player) Player.SetMove(0,1);
+            if(GUI.RepeatButton(new Rect(20+bw,y-bh-8,bw,bh),"▼") && Player) Player.SetMove(0,-1);
             if(GUI.RepeatButton(new Rect(Screen.width-bw*3-40,y,bw,bh),"مخفی‌کاری") && Player) Player.SetCrouch(true);
             else if(Player) Player.SetCrouch(false);
             if(GUI.Button(new Rect(Screen.width-bw*4-53,y,bw,bh),"تعامل") && Player && missions)
