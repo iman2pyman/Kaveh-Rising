@@ -9,6 +9,7 @@ var player: CharacterBody3D
 var camera: Camera3D
 var arena: Node3D
 var enemies: Array[CharacterBody3D] = []
+var rescue_targets: Array[Dictionary] = []
 var health := MAX_HP
 var stamina := 100.0
 var coins := 0
@@ -633,6 +634,10 @@ func _begin_chapter(index: int) -> void:
 	title_panel.hide()
 	var data: Dictionary = Chapters.get_chapter(chapter)
 	_build_arena(str(data.arena))
+	if chapter == 3 or chapter == 4:
+		_spawn_rescue_targets()
+	if chapter == 8:
+		_make_kaviani_banner()
 	player.position = Vector3(0,0,5)
 	player.velocity = Vector3.ZERO
 	health = minf(MAX_HP,health+25)
@@ -660,6 +665,156 @@ func _spawn_wave() -> void:
 		var radius := randf_range(7.5,10.5)
 		_spawn_enemy(kind,Vector3(cos(angle)*radius,0,-radius*0.55+sin(angle)*radius*0.5))
 	_update_counts()
+
+func _make_beast(body: CharacterBody3D, size: float) -> void:
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	visual.scale = Vector3.ONE * size
+	body.add_child(visual)
+	var torso := MeshInstance3D.new()
+	var torso_mesh := SphereMesh.new()
+	torso_mesh.radius = 0.72
+	torso_mesh.height = 1.45
+	torso.mesh = torso_mesh
+	torso.position = Vector3(0,0.95,0.05)
+	torso.material_override = _mat(Color(0.18,0.25,0.12))
+	visual.add_child(torso)
+	var head := MeshInstance3D.new()
+	var head_mesh := SphereMesh.new()
+	head_mesh.radius = 0.48
+	head_mesh.height = 0.72
+	head.mesh = head_mesh
+	head.position = Vector3(0,1.30,-0.72)
+	head.material_override = _mat(Color(0.24,0.30,0.15))
+	visual.add_child(head)
+	for side in [-1,1]:
+		var horn := MeshInstance3D.new()
+		var horn_mesh := CylinderMesh.new()
+		horn_mesh.top_radius = 0.015
+		horn_mesh.bottom_radius = 0.13
+		horn_mesh.height = 0.72
+		horn.mesh = horn_mesh
+		horn.position = Vector3(float(side)*0.30,1.83,-0.65)
+		horn.rotation.z = float(side)*-0.42
+		horn.material_override = _mat(Color(0.42,0.37,0.24))
+		visual.add_child(horn)
+		var eye := MeshInstance3D.new()
+		var eye_mesh := SphereMesh.new()
+		eye_mesh.radius = 0.075
+		eye.mesh = eye_mesh
+		eye.position = Vector3(float(side)*0.28,1.40,-1.12)
+		eye.material_override = _mat(Color(1.0,0.12,0.03),Color(1.0,0.04,0.01))
+		visual.add_child(eye)
+	for side in [-1,1]:
+		for fore in [-1,1]:
+			var leg := Node3D.new()
+			leg.name = "leg_%d_%d" % [side,fore]
+			leg.position = Vector3(float(side)*0.43,0.63, float(fore)*0.42)
+			visual.add_child(leg)
+			var limb := MeshInstance3D.new()
+			var limb_mesh := CapsuleMesh.new()
+			limb_mesh.radius = 0.18
+			limb_mesh.height = 0.72
+			limb.mesh = limb_mesh
+			limb.position.y = -0.28
+			limb.material_override = _mat(Color(0.14,0.19,0.10))
+			leg.add_child(limb)
+
+func _decorate_zahhak(body: CharacterBody3D) -> void:
+	var visual := body.get_node_or_null("Visual")
+	if visual == null:
+		return
+	for side in [-1,1]:
+		var serpent := Node3D.new()
+		serpent.name = "SerpentHead_%d" % side
+		serpent.position = Vector3(float(side)*0.50,1.75,0.12)
+		visual.add_child(serpent)
+		for segment in range(3):
+			var neck := MeshInstance3D.new()
+			var neck_mesh := CapsuleMesh.new()
+			neck_mesh.radius = 0.17 - float(segment)*0.025
+			neck_mesh.height = 0.48
+			neck.mesh = neck_mesh
+			neck.position = Vector3(float(side)*float(segment)*0.16,0.20+float(segment)*0.25,0)
+			neck.rotation.z = float(side)*-0.35
+			neck.material_override = _mat(Color(0.10,0.25,0.12))
+			serpent.add_child(neck)
+		var snake_head := MeshInstance3D.new()
+		var head_mesh := SphereMesh.new()
+		head_mesh.radius = 0.25
+		head_mesh.height = 0.42
+		snake_head.mesh = head_mesh
+		snake_head.position = Vector3(float(side)*0.50,0.95,-0.02)
+		snake_head.material_override = _mat(Color(0.13,0.31,0.15))
+		serpent.add_child(snake_head)
+		for eye_side in [-1,1]:
+			var eye := MeshInstance3D.new()
+			var eye_mesh := SphereMesh.new()
+			eye_mesh.radius = 0.055
+			eye.mesh = eye_mesh
+			eye.position = Vector3(float(eye_side)*0.14,1.00,-0.20)
+			eye.material_override = _mat(Color(1,0.08,0.02),Color(1,0.02,0.0))
+			serpent.add_child(eye)
+
+func _spawn_rescue_targets() -> void:
+	_clear_rescue_targets()
+	var packed := load("res://assets/characters/Mage.fbx") as PackedScene
+	var positions := [Vector3(-7,0,-5),Vector3(0,0,-9),Vector3(7,0,-5)]
+	for i in range(positions.size()):
+		var pos: Vector3 = positions[i]
+		var cage := Node3D.new()
+		cage.position = pos
+		arena.add_child(cage)
+		for side in [-1,1]:
+			for depth in [-1,1]:
+				var bar := MeshInstance3D.new()
+				var bar_mesh := CylinderMesh.new()
+				bar_mesh.top_radius = 0.045
+				bar_mesh.bottom_radius = 0.045
+				bar_mesh.height = 2.4
+				bar.mesh = bar_mesh
+				bar.position = Vector3(float(side)*0.85,1.2,float(depth)*0.75)
+				bar.material_override = _mat(Color(0.38,0.40,0.43))
+				cage.add_child(bar)
+		_box(cage,Vector3(0,2.35,0),Vector3(1.8,0.12,1.6),Color(0.28,0.29,0.31))
+		var person := Node3D.new()
+		person.position = pos + Vector3(0,0,-0.15)
+		arena.add_child(person)
+		if packed:
+			var model := packed.instantiate()
+			model.scale = Vector3.ONE*0.52
+			person.add_child(model)
+		else:
+			_box(person,Vector3(0,0.9,0),Vector3(0.55,1.6,0.4),Color(0.55,0.43,0.32))
+		rescue_targets.append({"person":person,"cage":cage,"position":pos})
+
+func _clear_rescue_targets() -> void:
+	for target in rescue_targets:
+		if is_instance_valid(target.get("person")):
+			target.person.queue_free()
+		if is_instance_valid(target.get("cage")):
+			target.cage.queue_free()
+	rescue_targets.clear()
+
+func _make_kaviani_banner() -> void:
+	var pole := MeshInstance3D.new()
+	var pole_mesh := CylinderMesh.new()
+	pole_mesh.top_radius = 0.07
+	pole_mesh.bottom_radius = 0.11
+	pole_mesh.height = 5.8
+	pole.mesh = pole_mesh
+	pole.position = Vector3(-8,2.9,-7)
+	pole.material_override = _mat(Color(0.55,0.40,0.18))
+	arena.add_child(pole)
+	var cloth := _box(arena,Vector3(-6.9,3.6,-7),Vector3(2.1,1.7,0.12),Color(0.62,0.08,0.09))
+	var emblem := MeshInstance3D.new()
+	var emblem_mesh := SphereMesh.new()
+	emblem_mesh.radius = 0.42
+	emblem_mesh.height = 0.2
+	emblem.mesh = emblem_mesh
+	emblem.position = Vector3(-6.9,3.6,-6.88)
+	emblem.material_override = _mat(Color(0.94,0.68,0.22))
+	arena.add_child(emblem)
 
 func _spawn_enemy(kind: String, pos: Vector3) -> void:
 	var enemy := CharacterBody3D.new()
@@ -692,8 +847,13 @@ func _spawn_enemy(kind: String, pos: Vector3) -> void:
 			power = 22
 			speed = 1.7
 			scale = 1.72
-	_make_humanoid(enemy,false,tunic,armor,scale)
-	_play_anim(enemy,"General/Idle_A")
+	if kind == "beast":
+		_make_beast(enemy,scale)
+	else:
+		_make_humanoid(enemy,false,tunic,armor,scale)
+		if kind == "boss":
+			_decorate_zahhak(enemy)
+		_play_anim(enemy,"General/Idle_A")
 	var col := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()
 	shape.radius = 0.43*scale
@@ -799,15 +959,36 @@ func _dodge() -> void:
 	_show_message("جاخالی به‌موقع!")
 
 func _interact() -> void:
-	if active and (chapter == 3 or chapter == 4):
-		rescued += 1
-		_play_anim(player,"General/Interact")
-		_play_sfx("door")
-		health = minf(MAX_HP,health+12)
-		hp_bar.value = health
-		_show_message("یک زندانی آزاد شد؛ مردم به خیزش می‌پیوندند")
-		if rescued >= 3:
-			interact_button.hide()
+	if not active or (chapter != 3 and chapter != 4):
+		return
+	var nearest_index := -1
+	var nearest_distance: float = 2.8
+	for i in range(rescue_targets.size()):
+		var person := rescue_targets[i].get("person") as Node3D
+		if is_instance_valid(person):
+			var distance := player.global_position.distance_to(person.global_position)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_index = i
+	if nearest_index < 0:
+		_show_message("برای آزادسازی به یکی از قفس‌ها نزدیک شو")
+		return
+	var target: Dictionary = rescue_targets[nearest_index]
+	var person := target.get("person") as Node3D
+	var cage := target.get("cage") as Node3D
+	if is_instance_valid(person):
+		person.queue_free()
+	if is_instance_valid(cage):
+		cage.queue_free()
+	rescue_targets.remove_at(nearest_index)
+	rescued += 1
+	_play_anim(player,"General/Interact")
+	_play_sfx("door")
+	health = minf(MAX_HP,health+12)
+	hp_bar.value = health
+	_show_message("زندانی آزاد شد؛ مردم به خیزش می‌پیوندند (%d از ۳)" % mini(rescued,3))
+	if rescue_targets.is_empty():
+		interact_button.hide()
 
 func _take_damage(amount: float) -> void:
 	if invulnerable > 0:
