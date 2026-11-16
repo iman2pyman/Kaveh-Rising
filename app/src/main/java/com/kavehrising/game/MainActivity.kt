@@ -44,8 +44,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var chapterIndex = prefs.getInt("chapter", 0).coerceIn(0, ChapterData.chapters.lastIndex)
     private var score = prefs.getInt("score", 0).coerceAtLeast(0)
     private var bestScore = prefs.getInt("best_score", 0).coerceAtLeast(0)
-    private var playerX = prefs.getFloat("player_x", 0.22f).coerceIn(.08f, .92f)
-    private var enemyX = prefs.getFloat("enemy_x", 0.78f).coerceIn(.08f, .92f)
+    private var playerX = GameRules.clampPosition(prefs.getFloat("player_x", 0.22f))
+    private var enemyX = GameRules.clampPosition(prefs.getFloat("enemy_x", 0.78f))
     private var health = prefs.getInt("health", GameRules.PLAYER_MAX_HEALTH).coerceIn(0, GameRules.PLAYER_MAX_HEALTH)
     private var enemyHealth = prefs.getInt("enemy_health", ChapterData.chapters[chapterIndex].enemyHealth)
         .coerceIn(0, ChapterData.chapters[chapterIndex].enemyHealth)
@@ -117,7 +117,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
         drawDamageFlash(canvas, w, h)
         drawControls(canvas, w, h)
 
-        if (!gameOver && !won && !paused) {
+        // Story cards are safe zones: enemies must not advance or attack behind the intro.
+        if (!gameOver && !won && !paused && !storyIntro) {
             updateEnemy()
             // A modest refresh rate keeps the simple Canvas game responsive while reducing CPU use.
             postInvalidateDelayed(100)
