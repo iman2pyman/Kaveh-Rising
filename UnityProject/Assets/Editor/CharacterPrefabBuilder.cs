@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -22,6 +23,8 @@ namespace KavehRising.Editor
         [MenuItem("Kaveh Rising/Build Rigged Character Prefabs")]
         public static void BuildPrefabs()
         {
+            Directory.CreateDirectory("Assets/Resources/Characters");
+            Directory.CreateDirectory("Assets/Art/Materials");
             ConfigureModel(HeroModelPath);
             ConfigureModel(BossModelPath);
             int clipCount = ImportAndCountAnimations();
