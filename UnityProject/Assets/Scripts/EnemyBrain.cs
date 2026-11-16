@@ -42,8 +42,8 @@ namespace KavehRising
                 float speed=root.Player.IsCrouching ? 0.8f : 1.45f;
                 transform.position+=delta.normalized*speed*Time.deltaTime;
                 if(delta.sqrMagnitude>.01f)transform.forward=delta.normalized;
-                if(animationDriver)animationDriver.SetLocomotion(speed/1.45f,false);
-                if(rigAnimation)rigAnimation.SetLocomotion(speed/1.45f,false);
+                if(animationDriver)animationDriver.SetLocomotion(.55f,false);
+                if(rigAnimation)rigAnimation.SetLocomotion(.55f,false);
             }
             else if(Time.time>=nextStrike)
             {

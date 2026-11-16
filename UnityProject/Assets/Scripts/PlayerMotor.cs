@@ -4,21 +4,22 @@ namespace KavehRising {
  [RequireComponent(typeof(CharacterController))]
  public class PlayerMotor:MonoBehaviour {
   CharacterController body; float moveX,moveZ,verticalVelocity,nextAttack,dodgeUntil,nextDodge,nextFootstep;
-  Vector3 dodgeDirection=Vector3.right; bool crouching; HumanoidAnimationDriver animationDriver; RiggedCharacterAnimation rigAnimation; CharacterVisuals visuals;
+  Vector3 dodgeDirection=Vector3.right; bool crouching,sprinting; HumanoidAnimationDriver animationDriver; RiggedCharacterAnimation rigAnimation; CharacterVisuals visuals;
   public bool IsDodging=>Time.time<dodgeUntil; public bool IsCrouching=>crouching; public float MoveAmount{get;private set;}
   void Awake(){body=GetComponent<CharacterController>();animationDriver=GetComponentInChildren<HumanoidAnimationDriver>();rigAnimation=GetComponent<RiggedCharacterAnimation>();visuals=GetComponent<CharacterVisuals>();}
   public void SetMove(float x){SetMove(x,0);}
   public void SetMove(float x,float z){moveX=Mathf.Clamp(x,-1,1);moveZ=Mathf.Clamp(z,-1,1);}
-  public void SetCrouch(bool value){crouching=value;}
+  public void SetCrouch(bool value){crouching=value;if(value)sprinting=false;}
+  public void SetSprint(bool value){sprinting=value&&!crouching;}
   void Update(){
    var root=GameRoot.Instance;if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory){moveX=moveZ=0;MoveAmount=0;return;}
    float x=Mathf.Abs(moveX)>.01f?moveX:Input.GetAxisRaw("Horizontal");float z=Mathf.Abs(moveZ)>.01f?moveZ:Input.GetAxisRaw("Vertical");
    Vector3 direction=new Vector3(x,0,z);if(direction.sqrMagnitude>1)direction.Normalize();
-   float speed=crouching?1.65f:4.2f;Vector3 planar=direction*speed;if(IsDodging)planar=dodgeDirection*8.5f;
+   float speed=crouching?1.45f:sprinting?4.8f:3.1f;Vector3 planar=direction*speed;if(IsDodging)planar=dodgeDirection*8.5f;
    if(body.isGrounded&&verticalVelocity<0)verticalVelocity=-2f;verticalVelocity+=Physics.gravity.y*Time.deltaTime;
    body.Move((planar+Vector3.up*verticalVelocity)*Time.deltaTime);
    if(direction.sqrMagnitude>.01f)transform.forward=direction.normalized;
-   MoveAmount=planar.magnitude/4.2f;
+   MoveAmount=planar.magnitude/4.8f;
    if(MoveAmount>.1f&&body.isGrounded&&Time.time>=nextFootstep){nextFootstep=Time.time+(crouching ? .62f : .4f);var stepAudio=FindObjectOfType<GameAudio>();if(stepAudio)stepAudio.PlayFootstep(crouching);}
    if(animationDriver)animationDriver.SetLocomotion(MoveAmount,crouching,body.isGrounded);if(rigAnimation)rigAnimation.SetLocomotion(MoveAmount,crouching);
    moveX=moveZ=0;
