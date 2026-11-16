@@ -8,7 +8,8 @@ namespace KavehRising
         public bool IsBoss;
         public bool IsHero;
         public Transform Weapon;
-        Transform leftArm, rightArm, leftLeg, rightLeg, hammer;\n        float attackTime, attackDuration; bool heavyAttack;
+        Transform leftArm, rightArm, leftLeg, rightLeg, hammer;
+        float attackTime, attackDuration; bool heavyAttack;
         Vector3 armRest, legRest;
         float phase;
 
@@ -68,7 +69,8 @@ namespace KavehRising
             }
             phase=Random.value*6f;
         }
-        public void PlayAttack(bool heavy){heavyAttack=heavy;attackDuration=heavy?.58f:.32f;attackTime=attackDuration;}\n        void Update()
+        public void PlayAttack(bool heavy){heavyAttack=heavy;attackDuration=heavy ? .58f : .32f;attackTime=attackDuration;}
+        void Update()
         {
             float speed=GetComponent<PlayerMotor>()?GetComponent<PlayerMotor>().MoveAmount:0f;
             phase+=Time.deltaTime*(speed>.1f?9f:2f);
@@ -76,7 +78,8 @@ namespace KavehRising
             leftLeg.localRotation=Quaternion.Euler(swing*24,0,0);
             rightLeg.localRotation=Quaternion.Euler(-swing*24,0,0);
             leftArm.localRotation=Quaternion.Euler(-swing*18,0,0);
-            rightArm.localRotation=Quaternion.Euler(swing*18,0,0);\n            if(attackTime>0){float t=1f-attackTime/attackDuration;float arc=Mathf.Sin(t*Mathf.PI)*(heavyAttack?105f:72f);rightArm.localRotation=Quaternion.Euler(-arc,0,heavyAttack?18f:8f);attackTime-=Time.deltaTime;}
+            rightArm.localRotation=Quaternion.Euler(swing*18,0,0);
+            if(attackTime>0){float t=1f-attackTime/attackDuration;float arc=Mathf.Sin(t*Mathf.PI)*(heavyAttack?105f:72f);rightArm.localRotation=Quaternion.Euler(-arc,0,heavyAttack?18f:8f);attackTime-=Time.deltaTime;}
         }
     }
 }

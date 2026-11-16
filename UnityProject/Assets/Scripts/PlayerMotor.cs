@@ -25,6 +25,7 @@ namespace KavehRising {
    nextDodge=Time.time+1.7f;dodgeUntil=Time.time+.38f;Vector3 input=new Vector3(moveX,0,moveZ);
    dodgeDirection=input.sqrMagnitude>.1f?input.normalized:transform.forward;if(animationDriver)animationDriver.PlayDodge();if(rigAnimation)rigAnimation.PlayDodge();
   }
+  public void PlayHit(){if(animationDriver)animationDriver.PlayHit();if(rigAnimation)rigAnimation.PlayHit();}
   public void Attack(bool heavy){
    var root=GameRoot.Instance;if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory||Time.time<nextAttack)return;
    nextAttack=Time.time+(heavy?1.25f:.48f);if(animationDriver)animationDriver.PlayAttack(heavy);if(rigAnimation)rigAnimation.PlayAttack(heavy);if(visuals)visuals.PlayAttack(heavy);
