@@ -67,7 +67,6 @@ private class KavehGameView(private val host: Activity) : View(host) {
         canvas.drawRect(0f, h * .69f, w, h * .82f, paint)
         paint.color = Color.rgb(45, 28, 20)
         canvas.drawRect(0f, h * .82f, w, h, paint)
-        // Warm forge glow
         paint.color = Color.argb(55, 255, 130, 30)
         canvas.drawCircle(w * .5f, h * .66f, min(w, h) * .16f, paint)
     }
@@ -88,21 +87,23 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawHud(canvas: Canvas, w: Float, h: Float) {
+        val chapter = ChapterData.chapters[chapterIndex]
         paint.color = Color.rgb(230, 174, 77)
         paint.textSize = min(w, h) * .052f
         paint.textAlign = Paint.Align.CENTER
-        canvas.drawText("قیام کاوه | " + ChapterData.chapters[chapterIndex].titleFa, w / 2, h * .08f, paint)
+        canvas.drawText("قیام کاوه | " + chapter.titleFa, w / 2, h * .075f, paint)
+        paint.color = Color.rgb(245, 220, 195)
+        paint.textSize = min(w, h) * .032f
+        canvas.drawText(chapter.subtitleFa, w / 2, h * .12f, paint)
         paint.color = Color.WHITE
         paint.textSize = min(w, h) * .038f
-        canvas.drawText("سلامتی کاوه: $health     جان دشمن: $enemyHealth", w / 2, h * .14f, paint)
-        if (nowShowingMessage()) {
+        canvas.drawText("سلامتی کاوه: $health     جان دشمن: $enemyHealth", w / 2, h * .17f, paint)
+        if (System.currentTimeMillis() < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
-            canvas.drawText(message, w / 2, h * .21f, paint)
+            canvas.drawText(message, w / 2, h * .23f, paint)
         }
     }
-
-    private fun nowShowingMessage() = System.currentTimeMillis() < messageUntil
 
     private fun drawCharacter(canvas: Canvas, x: Float, ground: Float, hero: Boolean) {
         paint.color = if (hero) Color.rgb(218, 165, 65) else Color.rgb(125, 45, 35)
