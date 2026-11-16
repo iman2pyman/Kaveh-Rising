@@ -243,10 +243,21 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.color = Color.rgb(255, 220, 145)
         paint.textSize = min(w, h) * .028f
         canvas.drawText("امتیاز: $score   |   رکورد: $bestScore", w / 2, h * .255f, paint)
-        if (System.currentTimeMillis() < messageUntil) {
+        val now = System.currentTimeMillis()
+        if (now < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
             canvas.drawText(message, w / 2, h * .29f, paint)
+        }
+
+        // Telegraph an incoming enemy strike so players can react with dodge.
+        val enemyIsClose = abs(enemyX - playerX) < .19f
+        val enemyStepProgress = now - lastEnemyStep
+        if (!paused && !storyIntro && !gameOver && !won &&
+            enemyIsClose && enemyStepProgress in 1050L..1649L) {
+            paint.color = Color.rgb(255, 105, 75)
+            paint.textSize = min(w, h) * .032f
+            canvas.drawText("هشدار: نگهبان آماده ضربه است؛ جاخالی بده!", w / 2, h * .33f, paint)
         }
     }
 
