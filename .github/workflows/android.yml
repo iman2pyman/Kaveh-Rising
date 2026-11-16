@@ -69,7 +69,7 @@ jobs:
       - name: Export Android debug APK
         run: |
           mkdir -p GodotProject/build
-          "$GODOT_BIN" --headless --path GodotProject --export-debug "Android" GodotProject/build/KAVEH-RISING-debug.apk
+          "$GODOT_BIN" --headless --path GodotProject --export-debug "Android" build/KAVEH-RISING-debug.apk
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
