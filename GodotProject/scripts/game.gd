@@ -17,6 +17,10 @@ var rescued := 0
 var chapter := 0
 var wave := 1
 var saved_chapter := 0
+var sfx_streams: Dictionary = {}
+var sfx_pool: Array[AudioStreamPlayer] = []
+var sfx_cursor := 0
+var footstep_clock := 0.0
 var active := false
 var ended := false
 var attack_cd := 0.0
@@ -46,6 +50,7 @@ var interact_button: Button
 func _ready() -> void:
 	randomize()
 	_load_save()
+	_setup_audio()
 	_make_environment()
 	_make_player()
 	_make_camera()
@@ -77,12 +82,46 @@ func _physics_process(delta: float) -> void:
 	player.position.x = clampf(player.position.x, -15.2, 15.2)
 	player.position.z = clampf(player.position.z, -15.2, 15.2)
 	_update_enemies(delta)
+	if Vector2(player.velocity.x, player.velocity.z).length() > 1.0:
+		footstep_clock -= delta
+		if footstep_clock <= 0.0:
+			footstep_clock = 0.48
+			_play_sfx("grass" if chapter in [1,2,5,6] else "stone")
+	else:
+		footstep_clock = 0.0
 	camera.global_position = camera.global_position.lerp(player.global_position + Vector3(0, 5.4, 8.5), delta * 5.0)
 	camera.look_at(player.global_position + Vector3(0, 0.8, -1.0))
 	stamina = minf(100.0, stamina + delta * 7.0)
 	stamina_bar.value = stamina
 	if health <= 0.0:
 		_finish(false)
+
+func _setup_audio() -> void:
+	sfx_streams = {
+		"swing": load("res://assets/audio/weapon-swing.ogg"),
+		"impact": load("res://assets/audio/impact-light.ogg"),
+		"metal": load("res://assets/audio/metal-clang.ogg"),
+		"armor": load("res://assets/audio/armor-hit.ogg"),
+		"forge": load("res://assets/audio/forge-chop.ogg"),
+		"hammer": load("res://assets/audio/hammer-heavy.ogg"),
+		"victory": load("res://assets/audio/victory-bell.ogg"),
+		"door": load("res://assets/audio/dungeon-door.ogg"),
+		"grass": load("res://assets/audio/footstep-grass.ogg"),
+		"stone": load("res://assets/audio/footstep-stone.ogg")
+	}
+	for i in range(4):
+		var player_sfx := AudioStreamPlayer.new()
+		player_sfx.volume_db = -5.0
+		add_child(player_sfx)
+		sfx_pool.append(player_sfx)
+
+func _play_sfx(key: String) -> void:
+	if not sfx_streams.has(key) or sfx_streams[key] == null or sfx_pool.is_empty():
+		return
+	var player_sfx := sfx_pool[sfx_cursor]
+	sfx_cursor = (sfx_cursor + 1) % sfx_pool.size()
+	player_sfx.stream = sfx_streams[key]
+	player_sfx.play()
 
 func _make_environment() -> void:
 	var we := WorldEnvironment.new()
@@ -616,6 +655,7 @@ func _attack() -> void:
 	if not active or ended or attack_cd > 0:
 		return
 	attack_cd = 0.42
+	_play_sfx("swing")
 	hammer.rotation.x = -1.0
 	var hit := false
 	for enemy in enemies.duplicate():
@@ -634,6 +674,7 @@ func _attack() -> void:
 				enemy.queue_free()
 				enemies.erase(enemy)
 	if hit:
+		_play_sfx("metal")
 		_show_message("ضربه سنگین کاوه!")
 	else:
 		_show_message("رو به دشمن بایست و نزدیک‌تر شو")
@@ -644,6 +685,7 @@ func _dodge() -> void:
 	if not active or ended or dodge_cd > 0 or stamina < 25:
 		return
 	dodge_cd = 1.15
+	_play_sfx("armor")
 	stamina -= 25
 	var dir := Vector3(move.x,0,move.y)
 	if dir.length() < 0.1:
@@ -656,6 +698,7 @@ func _dodge() -> void:
 func _interact() -> void:
 	if active and (chapter == 3 or chapter == 4):
 		rescued += 1
+		_play_sfx("door")
 		health = minf(MAX_HP,health+12)
 		hp_bar.value = health
 		_show_message("یک زندانی آزاد شد؛ مردم به خیزش می‌پیوندند")
@@ -666,6 +709,7 @@ func _take_damage(amount: float) -> void:
 	if invulnerable > 0:
 		return
 	health = maxf(0,health-amount)
+	_play_sfx("armor")
 	hp_bar.value = health
 	invulnerable = 0.45
 	_show_message("ضربه خوردی؛ جاخالی بده!")
@@ -692,6 +736,7 @@ func _wave_cleared() -> void:
 		_show_message("موج بعدی دشمنان در راه است")
 		get_tree().create_timer(1.6).timeout.connect(_spawn_wave)
 	else:
+		_play_sfx("victory")
 		coins += int(data.reward)
 		_save(chapter+1)
 		if chapter == 9:
@@ -813,36 +858,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func _show_message(text_value: String) -> void:
 	message.text = text_value
 	message_cd = 2.7
-
-func _show_title() -> void:
-	for child in title_panel.get_children():
-		child.queue_free()
-	var box := VBoxContainer.new()
-	title_panel.add_child(box)
-	var title := Label.new()
-	title.text = "قیام کاوه"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size",38)
-	box.add_child(title)
-	var sub := Label.new()
-	sub.text = "KAVEH RISING  |  حماسه‌ای از اسطوره‌های ایران"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sub)
-	var intro := Label.new()
-	intro.text = "۱۰ فصل داستانی • ۱۷ موج نبرد\nمبارزه، نجات مردم و رویارویی با ضحاک"
-	intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	intro.custom_minimum_size.y = 72
-	box.add_child(intro)
-	var start := Button.new()
-	start.text = "شروع خیزش"
-	start.custom_minimum_size.y = 54
-	start.pressed.connect(_start_new)
-	box.add_child(start)
-	var resume := Button.new()
-	resume.text = "ادامه از فصل ذخیره‌شده"
-	resume.pressed.connect(_resume)
-	box.add_child(resume)
-	title_panel.show()
 
 func _save(next_chapter: int) -> void:
 	saved_chapter = clampi(next_chapter,0,Chapters.chapter_count()-1)
