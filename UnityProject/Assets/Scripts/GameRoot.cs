@@ -23,19 +23,19 @@ namespace KavehRising
         public int Health{get;private set;}=5; public int Score{get;private set;} public int EnemyHealth{get;private set;}
         public bool IsPaused{get;private set;} public bool IsGameOver{get;private set;} public bool IsVictory{get;private set;}
         public bool HasPotion{get;private set;}=true; public string Notice{get;private set;}="برای حرکت از دکمه‌ها استفاده کن";
-        public PlayerMotor Player{get;private set;} public EnemyBrain Enemy{get;private set;}
+        public PlayerMotor Player{get;private set;} public EnemyBrain Enemy{get;private set;}\n        MissionDirector missions;
         void Awake()
         {
             if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}
             Instance=this; Application.targetFrameRate=60; Screen.orientation=ScreenOrientation.LandscapeLeft;
             LoadProgress();
             if(!FindObjectOfType<GameAudio>())gameObject.AddComponent<GameAudio>();
-            if(!FindObjectOfType<VoiceDialogueDirector>())gameObject.AddComponent<VoiceDialogueDirector>();
+            if(!FindObjectOfType<VoiceDialogueDirector>())gameObject.AddComponent<VoiceDialogueDirector>();\n            missions=GetComponent<MissionDirector>(); if(!missions)missions=gameObject.AddComponent<MissionDirector>();
             StartChapter(false);
         }
         public void RegisterActors(PlayerMotor p,EnemyBrain e){Player=p;Enemy=e;}
         public ChapterData Current=>Chapters[Mathf.Clamp(Chapter,0,Chapters.Length-1)];
-        public void DamagePlayer(int amount)
+        public void SetNotice(string message){Notice=message;}\n        public void CheckChapterCompletion(){if(IsGameOver||IsVictory||EnemyHealth>0)return;if(missions!=null&&!missions.IsComplete){Notice=\"دشمن شکست خورد؛ هدف‌های مرحله را کامل کن\";return;}IsVictory=true;Notice=Chapter==Chapters.Length-1?\"ضحاک شکست خورد؛ ایران آزاد شد!\":\"پیروزی! فصل بعد آماده است\";SaveProgress();}\n        public void DamagePlayer(int amount)
         {
             if(IsPaused||IsGameOver||IsVictory)return;
             Health=Mathf.Max(0,Health-amount); Notice="کاوه آسیب دید!";
@@ -64,7 +64,7 @@ namespace KavehRising
             IsPaused=false;IsGameOver=false;IsVictory=false;if(resetHealth)Health=5;
             HasPotion=true;EnemyHealth=Current.enemyHealth;
             if(Player!=null)Destroy(Player.gameObject);if(Enemy!=null)Destroy(Enemy.gameObject);
-            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);
+            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);\n            if(missions)missions.BeginChapter(Chapter);
             var dialogue=FindObjectOfType<VoiceDialogueDirector>(); if(dialogue)dialogue.PlayChapter(Chapter);
             SaveProgress();
         }
@@ -76,11 +76,11 @@ namespace KavehRising
             GUI.Box(new Rect(10,10,Screen.width*.58f,92),"");GUI.color=Color.white;
             GUI.Label(new Rect(24,13,Screen.width*.55f,28),$"قیام کاوه  |  فصل {Chapter+1}/10  |  {Current.title}  |  امتیاز {Score}");
             GUI.Label(new Rect(24,42,Screen.width*.55f,26),$"سلامتی {Health}/5     دشمن {EnemyHealth}/{Current.enemyHealth}");
-            GUI.Label(new Rect(24,67,Screen.width*.55f,26),Current.objective);
+            GUI.Label(new Rect(24,67,Screen.width*.55f,26),Current.objective+"  |  "+(missions?missions.CurrentTask:""));
             float bw=Screen.width*.105f,bh=Screen.height*.14f,y=Screen.height-bh-14;
             if(GUI.RepeatButton(new Rect(12,y,bw,bh),"◀")&&Player)Player.SetMove(-1);
             if(GUI.RepeatButton(new Rect(20+bw,y,bw,bh),"▶")&&Player)Player.SetMove(1);
-            if(GUI.Button(new Rect(Screen.width-bw*3-40,y,bw,bh),"جاخالی")&&Player)Player.Dodge();
+            if(GUI.RepeatButton(new Rect(Screen.width-bw*3-40,y,bw,bh),"مخفی‌کاری")&&Player)Player.SetCrouch(true); else if(Player)Player.SetCrouch(false);\n            if(GUI.Button(new Rect(Screen.width-bw*4-53,y,bw,bh),"تعامل")&&Player&&missions){if(!missions.TryInteract(Player.transform))Notice="به هدف نزدیک‌تر شو";}\n            if(GUI.Button(new Rect(Screen.width-bw*3-40,y-bh-8,bw,bh),"جاخالی")&&Player)Player.Dodge();
             if(GUI.Button(new Rect(Screen.width-bw*2-27,y,bw,bh),"حمله")&&Player)Player.Attack(false);
             if(GUI.Button(new Rect(Screen.width-bw-14,y,bw,bh),"ضربه سنگین")&&Player)Player.Attack(true);
             if(GUI.Button(new Rect(Screen.width-110,12,96,42),IsPaused?"ادامه":"مکث"))TogglePause();

@@ -4,8 +4,8 @@ namespace KavehRising
 {
     public class EnemyBrain : MonoBehaviour
     {
-        float nextStrike; HumanoidAnimationDriver animationDriver;
-        void Awake(){animationDriver=GetComponentInChildren<HumanoidAnimationDriver>();}
+        float nextStrike; float nextPatrol; Vector3 patrolTarget; HumanoidAnimationDriver animationDriver;
+        void Awake(){animationDriver=GetComponentInChildren<HumanoidAnimationDriver>();patrolTarget=transform.position+Vector3.left*3f;}
         public bool IsDead { get; private set; }
 
         void Update()
@@ -15,7 +15,7 @@ namespace KavehRising
             var player = root.Player.transform;
             Vector3 delta = player.position - transform.position;
             delta.y = 0;
-            float distance = delta.magnitude;
+            float distance = delta.magnitude;\n            if(root.Player.IsCrouching && distance>3.4f){if(Time.time>=nextPatrol){nextPatrol=Time.time+2.5f;patrolTarget=transform.position+(Random.value>.5f?Vector3.left:Vector3.right)*2f;}Vector3 patrol=patrolTarget-transform.position;patrol.y=0;if(patrol.magnitude>.3f){transform.position+=patrol.normalized*.55f*Time.deltaTime;transform.forward=patrol.normalized;}if(animationDriver)animationDriver.SetLocomotion(.2f,false);return;}
             if (distance > 2.15f)
             {
                 float speed = root.Player.IsCrouching ? .8f : 1.45f;
