@@ -141,7 +141,7 @@ private class KavehGameView : View {
         val w = width.toFloat()
         val h = height.toFloat()
         if (gameOver || won) {
-            playerX = .22f; enemyX = .78f; health = 3; enemyHealth = 5
+            playerX = .22f; enemyX = .78f; health = 3; enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
             gameOver = false; won = false
             message = "کاوه را به سوی دشمن هدایت کن"
             invalidate()
