@@ -83,6 +83,7 @@ namespace KavehRising.Editor
         {
             var shader = Shader.Find("Standard");
             if (!shader) shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (!shader) throw new System.Exception("No compatible material shader is available for " + name + ".");
             var material = new Material(shader) { name = name, color = tint };
             if (texture) material.mainTexture = texture;
             material.SetFloat("_Metallic", .18f); material.SetFloat("_Glossiness", .32f);
@@ -111,6 +112,23 @@ namespace KavehRising.Editor
             PrefabUtility.SaveAsPrefabAsset(instance, "Assets/Resources/Characters/" + prefabName + ".prefab");
             Object.DestroyImmediate(instance);
         }
+        static Material GetOrCreateAccessoryMaterial(string name, Color color, float metallic)
+        {
+            string path = "Assets/Art/Materials/" + name + ".mat";
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing) return existing;
+
+            var shader = Shader.Find("Standard");
+            if (!shader) shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (!shader) throw new System.Exception("No compatible shader is available for accessory material " + name + ".");
+
+            var material = new Material(shader) { name = name, color = color };
+            material.SetFloat("_Metallic", metallic);
+            material.SetFloat("_Glossiness", .32f);
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
         static void AddAccessories(Transform root, bool hero)
         {
             Transform hand = FindBone(root, "hand_r", "righthand", "right_hand");
@@ -125,12 +143,13 @@ namespace KavehRising.Editor
                 var hammerHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 hammerHead.name = "Kaveh forged hammer head"; hammerHead.transform.SetParent(handle.transform,false);
                 hammerHead.transform.localPosition = new Vector3(0,.95f,0); hammerHead.transform.localScale = new Vector3(3.8f,.42f,1.25f);
-                var iron = new Material(Shader.Find("Standard")); iron.color = new Color(.25f,.28f,.3f); iron.SetFloat("_Metallic",.8f);
-                hammerHead.GetComponent<Renderer>().sharedMaterial = iron; RemoveCollider(hammerHead);
+                hammerHead.GetComponent<Renderer>().sharedMaterial = GetOrCreateAccessoryMaterial(
+                    "Kaveh_Hammer_Iron", new Color(.25f,.28f,.3f), .8f);
+                RemoveCollider(hammerHead);
             }
             if (!hero && head)
             {
-                var bronze = new Material(Shader.Find("Standard")); bronze.color = new Color(.12f,.25f,.18f); bronze.SetFloat("_Metallic",.65f);
+                var bronze = GetOrCreateAccessoryMaterial("Dahhak_Serpent_Bronze", new Color(.12f,.25f,.18f), .65f);
                 for(int side=-1;side<=1;side+=2)
                 {
                     var horn=GameObject.CreatePrimitive(PrimitiveType.Cylinder);
