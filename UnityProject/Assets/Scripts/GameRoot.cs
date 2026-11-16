@@ -32,6 +32,7 @@ namespace KavehRising
         };
 
         public int Chapter { get; private set; }
+        public int UnlockedChapter { get; private set; }
         public int Health { get; private set; } = 5;
         public int Score { get; private set; }
         public int EnemyHealth { get; private set; }
@@ -53,11 +54,7 @@ namespace KavehRising
             StartChapter(false);
         }
 
-        public void RegisterActors(PlayerMotor player, EnemyBrain enemy)
-        {
-            Player = player; Enemy = enemy;
-        }
-
+        public void RegisterActors(PlayerMotor player, EnemyBrain enemy) { Player = player; Enemy = enemy; }
         public ChapterData Current => Chapters[Mathf.Clamp(Chapter, 0, Chapters.Length - 1)];
 
         public void DamagePlayer(int amount)
@@ -76,7 +73,9 @@ namespace KavehRising
             Notice = "ضربه وارد شد!";
             if (EnemyHealth == 0)
             {
+                if (Enemy != null) Enemy.MarkDead();
                 Score += 100 + Chapter * 25;
+                UnlockedChapter = Mathf.Max(UnlockedChapter, Mathf.Min(Chapter + 1, Chapters.Length - 1));
                 IsVictory = true;
                 Notice = Chapter == Chapters.Length - 1 ? "ضحاک شکست خورد؛ ایران آزاد شد!" : "پیروزی! فصل بعد آماده است";
                 SaveProgress();
@@ -94,8 +93,8 @@ namespace KavehRising
         public void NextChapter()
         {
             if (!IsVictory) return;
-            Chapter = (Chapter + 1) % Chapters.Length;
-            if (Chapter == 0) Score = 0;
+            if (Chapter == Chapters.Length - 1) { Chapter = 0; Score = 0; }
+            else Chapter = Mathf.Min(UnlockedChapter, Chapter + 1);
             StartChapter(true);
         }
         public void Retry() { StartChapter(false); }
@@ -115,12 +114,15 @@ namespace KavehRising
         void SaveProgress()
         {
             PlayerPrefs.SetInt("kr_chapter", Chapter);
+            PlayerPrefs.SetInt("kr_unlocked", UnlockedChapter);
             PlayerPrefs.SetInt("kr_score", Score);
             PlayerPrefs.Save();
         }
         void LoadProgress()
         {
             Chapter = Mathf.Clamp(PlayerPrefs.GetInt("kr_chapter", 0), 0, Chapters.Length - 1);
+            UnlockedChapter = Mathf.Clamp(PlayerPrefs.GetInt("kr_unlocked", 0), 0, Chapters.Length - 1);
+            Chapter = Mathf.Min(Chapter, UnlockedChapter);
             Score = PlayerPrefs.GetInt("kr_score", 0);
         }
 
@@ -128,11 +130,12 @@ namespace KavehRising
         {
             GUI.depth = -10;
             var old = GUI.color;
-            GUI.color = new Color(.05f,.04f,.04f,.78f);
-            GUI.Box(new Rect(12,10,Screen.width*.46f,74),"");
+            GUI.color = new Color(.05f,.04f,.04f,.82f);
+            GUI.Box(new Rect(12,10,Screen.width*.52f,86),"");
             GUI.color = Color.white;
-            GUI.Label(new Rect(25,14,Screen.width*.44f,30), $"فصل {Chapter+1}/10  |  {Current.title}     امتیاز: {Score}");
-            GUI.Label(new Rect(25,45,Screen.width*.44f,28), $"سلامتی: {Health}/5       دشمن: {EnemyHealth}/{Current.enemyHealth}");
+            GUI.Label(new Rect(25,14,Screen.width*.50f,30), $"فصل {Chapter+1}/10  |  {Current.title}     امتیاز: {Score}");
+            GUI.Label(new Rect(25,45,Screen.width*.50f,28), $"سلامتی: {Health}/5       دشمن: {EnemyHealth}/{Current.enemyHealth}");
+            GUI.Label(new Rect(25,68,Screen.width*.50f,24), Current.objective);
             float bw=Screen.width*.115f, bh=Screen.height*.14f, y=Screen.height-bh-16;
             if (GUI.RepeatButton(new Rect(14,y,bw,bh),"◀")) { if(Player) Player.SetMove(-1); }
             if (GUI.RepeatButton(new Rect(22+bw,y,bw,bh),"▶")) { if(Player) Player.SetMove(1); }
@@ -142,11 +145,11 @@ namespace KavehRising
             if (GUI.Button(new Rect(Screen.width-110,12,96,42), IsPaused?"ادامه":"مکث")) TogglePause();
             if (GUI.Button(new Rect(Screen.width-220,12,100,42),"معجون")) UsePotion();
             GUI.color = new Color(1f,.82f,.48f,1f);
-            GUI.Label(new Rect(Screen.width*.25f,Screen.height*.16f,Screen.width*.5f,42),Notice);
+            GUI.Label(new Rect(Screen.width*.25f,Screen.height*.18f,Screen.width*.5f,42),Notice);
             GUI.color = old;
             if (IsPaused || IsGameOver || IsVictory)
             {
-                GUI.color = new Color(.02f,.02f,.02f,.88f);
+                GUI.color = new Color(.02f,.02f,.02f,.9f);
                 GUI.Box(new Rect(Screen.width*.25f,Screen.height*.28f,Screen.width*.5f,Screen.height*.44f),"");
                 GUI.color = Color.white;
                 GUI.Label(new Rect(Screen.width*.30f,Screen.height*.34f,Screen.width*.4f,50),IsPaused?"بازی متوقف شد":IsGameOver?"کاوه شکست خورد":"پیروزی");

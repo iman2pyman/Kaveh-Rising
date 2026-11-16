@@ -1,25 +1,17 @@
 # KAVEH RISING | قیام کاوه
 
-A lightweight, Persian-first Android action game inspired by the legend of Kaveh the Blacksmith and Zahhak.
+**موتور اصلی پروژه: Unity 2022.3.62f1 — Android**
 
-## Complete game loop
+این مخزن در حال انتقال کامل از نمونه اولیه Native Android به پروژه سه‌بعدی Unity است. پوشه `UnityProject/` مسیر اصلی توسعه بازی است. کد قدیمی Android در ریشه صرفاً نمونه اولیه/میراثی است و نسخه نهایی بازی محسوب نمی‌شود.
 
-- Six story chapters, from the forge to the raising of the Kaviani banner.
-- Chapter-specific environments, opponents, enemy health, and short Persian story introductions.
-- Five touch controls: move left/right, dodge, normal attack, and heavy attack.
-- Timed enemy turns, telegraphed attacks, special strikes in later chapters, and temporary dodge invulnerability.
-- Three player health points, one healing potion per attempt, chapter rewards, score, and a saved high score.
-- Local save/resume for chapter progress and combat state.
-- Native Android Canvas graphics; no large art/audio bundles and no extra runtime libraries.
+## مسیر ساخت
+- پروژه Unity: `UnityProject/`
+- راهنمای فارسی: [UnityProject/README_FA.md](UnityProject/README_FA.md)
+- ساخت APK از Unity: منوی `Kaveh Rising > Build Android APK`
+- ساخت ابری: GitHub Actions → Unity Android APK (نیازمند secrets معتبر لایسنس Unity)
 
-## Project quality
+## وضعیت واقعی
+هسته اولیه Unity شامل ده فصل داستانی، محیط runtime موقت، حرکت و مبارزه، دشمن تعقیب‌کننده، جاخالی، ذخیره پیشرفت و کنترل لمسی است. این هنوز نسخه نهایی یا APK تأییدشده نیست؛ مدل‌ها، انیمیشن‌ها، محیط‌های هنری، صدا، رابط نهایی و تست روی دستگاه باید تکمیل شوند. هیچ فایل حجیم مصنوعی برای بالا بردن حجم اضافه نمی‌شود؛ حجم نهایی باید از دارایی‌های واقعی بازی بیاید.
 
-Combat calculations live in a small pure-Kotlin rules module with JVM unit tests. GitHub Actions runs the unit tests and builds a Debug APK on pushes to `main`, pull requests, and manual workflow dispatch.
-
-## Build locally
-
-Open the project in Android Studio with Android SDK 35 and JDK 17. The project uses Android Gradle Plugin 8.7.3 and Kotlin 2.0.21. Run `testDebugUnitTest` and `assembleDebug` to test and build.
-
-## Downloading a build
-
-After the GitHub Actions workflow succeeds, open the run under the repository's Actions tab and download the `KAVEH-RISING-debug-apk` artifact.
+## توافق توسعه
+اولویت با یک بازی اکشن ماجراجویی سوم‌شخص فارسی، با ترکیب مبارزه، مخفی‌کاری و اکتشاف و اجرای مناسب اندروید است. تحویل نهایی فقط پس از ساخت موفق APK و بررسی واقعی پروژه اعلام می‌شود.

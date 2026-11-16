@@ -6,24 +6,35 @@ namespace KavehRising
     {
         float nextStrike;
         public bool IsDead { get; private set; }
+
         void Update()
         {
-            var root=GameRoot.Instance;
-            if(root==null || root.IsPaused || root.IsGameOver || root.IsVictory || IsDead || root.Player==null) return;
-            var player=root.Player.transform;
-            float d=Vector3.Distance(transform.position,player.position);
-            if(d>2.1f)
+            var root = GameRoot.Instance;
+            if (root == null || root.IsPaused || root.IsGameOver || root.IsVictory || IsDead || root.Player == null) return;
+            var player = root.Player.transform;
+            Vector3 delta = player.position - transform.position;
+            delta.y = 0;
+            float distance = delta.magnitude;
+            if (distance > 2.15f)
             {
-                Vector3 dir=(player.position-transform.position); dir.y=0;
-                transform.position += dir.normalized * 1.25f * Time.deltaTime;
-                if(dir.sqrMagnitude>.01f) transform.forward=dir.normalized;
+                float speed = root.Player.IsCrouching ? .8f : 1.45f;
+                transform.position += delta.normalized * speed * Time.deltaTime;
+                if (delta.sqrMagnitude > .01f) transform.forward = delta.normalized;
             }
-            else if(Time.time>=nextStrike)
+            else if (Time.time >= nextStrike)
             {
-                nextStrike=Time.time+2.0f;
-                if(!root.Player.IsDodging) root.DamagePlayer(1);
+                nextStrike = Time.time + 1.8f;
+                if (!root.Player.IsDodging) root.DamagePlayer(1);
             }
         }
-        public void MarkDead(){ IsDead=true; gameObject.SetActive(false); }
+
+        public void MarkDead()
+        {
+            if (IsDead) return;
+            IsDead = true;
+            foreach (var c in GetComponents<Collider>()) c.enabled = false;
+            foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = false;
+            enabled = false;
+        }
     }
 }
