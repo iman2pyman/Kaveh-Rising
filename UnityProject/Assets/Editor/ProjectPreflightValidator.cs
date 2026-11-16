@@ -30,6 +30,19 @@ namespace KavehRising.Editor
         [MenuItem("Kaveh Rising/Validate Project Before Device Build")]
         public static void Validate()
         {
+            ValidateProject();
+        }
+
+        /// <summary>Runs the same checks as the menu and fails CI/device builds on errors.</summary>
+        public static void ValidateOrThrow()
+        {
+            int errors = ValidateProject();
+            if (errors > 0)
+                throw new InvalidOperationException("[KAVEH PREFLIGHT] Build blocked by " + errors + " preflight error(s). See the Unity log for details.");
+        }
+
+        static int ValidateProject()
+        {
             int errors = 0;
             int warnings = 0;
 
@@ -95,6 +108,7 @@ namespace KavehRising.Editor
             Debug.Log("[KAVEH PREFLIGHT] Result: " + errors + " error(s), " + warnings + " warning(s). This check does not build an APK.");
             if (errors == 0)
                 Debug.Log("[KAVEH PREFLIGHT] Static preflight passed. A real Android build and device test are still required before release.");
+            return errors;
         }
     }
 }
