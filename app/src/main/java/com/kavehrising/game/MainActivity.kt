@@ -578,6 +578,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun heavyAttack() {
         val now = System.currentTimeMillis()
+        if (won || gameOver || paused || storyIntro) return
         if (now < heavyAttackReadyAt) {
             message = "ضربه سنگین هنوز آماده نیست"
             messageUntil = now + 1000L
@@ -611,6 +612,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun attack() {
         val now = System.currentTimeMillis()
+        if (won || gameOver || paused || storyIntro) return
         if (now - hitCooldown < 600L) return
         hitCooldown = now
         attackEffectUntil = now + 240L
