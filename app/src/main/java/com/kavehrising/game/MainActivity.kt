@@ -397,7 +397,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 paint.color = Color.rgb(75, 25, 22)
                 canvas.drawOval(RectF(x - width * .065f, ground - height * .09f, x + width * .065f, ground + height * .015f), paint)
                 paint.color = Color.rgb(220, 170, 65)
-                canvas.drawPath(android.graphics.Path().apply {\n                    moveTo(x, headY - scale * 9f)\n                    lineTo(x - scale * 4f, headY)\n                    lineTo(x + scale * 4f, headY)\n                    close()\n                }, paint)
+                canvas.drawPath(android.graphics.Path().apply {
+                    moveTo(x, headY - scale * 9f)
+                    lineTo(x - scale * 4f, headY)
+                    lineTo(x + scale * 4f, headY)
+                    close()
+                }, paint)
             }
             else -> { // Zahhak: royal crown and two serpent-like necks
                 paint.color = Color.rgb(225, 175, 55)
