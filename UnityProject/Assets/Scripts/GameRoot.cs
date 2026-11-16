@@ -63,6 +63,7 @@ namespace KavehRising
         }
 
         public void RegisterActors(PlayerMotor player, EnemyBrain enemy) { Player = player; Enemy = enemy; }
+        public void RegisterEnemy(EnemyBrain enemy) { Enemy = enemy; }
         public void SetNotice(string message) { Notice = message; }
         bool chapterRewarded;
         public void CheckChapterCompletion()
