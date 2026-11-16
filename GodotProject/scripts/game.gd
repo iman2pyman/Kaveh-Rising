@@ -481,6 +481,7 @@ func _make_camera() -> void:
 
 func _make_hud() -> void:
 	hud = CanvasLayer.new()
+	hud.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(hud)
 	var top := PanelContainer.new()
 	top.position = Vector2(14,12)
