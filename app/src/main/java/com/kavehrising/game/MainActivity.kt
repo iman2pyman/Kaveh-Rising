@@ -209,6 +209,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
             enemyX += if (playerX > enemyX) .045f else -.045f
             enemyX = enemyX.coerceIn(.08f, .92f)
         }
+        // Save each completed enemy turn, including movement and incoming damage.
+        saveGameState()
     }
 
     private fun drawHud(canvas: Canvas, w: Float, h: Float) {
@@ -444,6 +446,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             message = "معجون درمانی مصرف شد؛ یک واحد سلامتی بازیابی شد"
         }
         messageUntil = now + 1400L
+        saveGameState()
     }
 
     private fun dodge() {
@@ -459,6 +462,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         playerX = (playerX + if (enemyX >= playerX) -.10f else .10f).coerceIn(.08f, .92f)
         message = "کاوه جاخالی داد؛ حالا ضدحمله کن!"
         messageUntil = now + 1200L
+        saveGameState()
     }
 
     private fun attack() {
@@ -480,6 +484,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 messageUntil = now + 1800L
                 won = true
             }
+            // Persist enemy health and victory immediately after a successful hit.
+            saveGameState()
         } else {
             message = "به دشمن نزدیک‌تر شو"
             messageUntil = now + 1100L
