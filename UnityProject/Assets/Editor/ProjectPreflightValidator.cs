@@ -18,6 +18,12 @@ namespace KavehRising.Editor
         {
             "Assets/Art/Characters/Barbarian.fbx",
             "Assets/Art/Characters/Mage.fbx",
+            "Assets/Art/Characters/barbarian_texture.png",
+            "Assets/Art/Characters/mage_texture.png",
+            "Assets/Art/Materials/Kaveh_-_Forged_Leather.mat",
+            "Assets/Art/Materials/Dahhak_-_Cursed_Jade.mat",
+            "Assets/Art/Materials/Kaveh_Hammer_Iron.mat",
+            "Assets/Art/Materials/Dahhak_Serpent_Bronze.mat",
             "Assets/Resources/Characters/KavehHumanoid.prefab",
             "Assets/Resources/Characters/DahhakHumanoid.prefab",
             "Assets/Resources/Animations/Rig_Medium_MovementBasic.glb",
@@ -55,15 +61,24 @@ namespace KavehRising.Editor
                 }
             }
 
-            string[] clips = AssetDatabase.FindAssets("t:AnimationClip", new[] { "Assets/Resources/Animations/Imported" });
-            if (clips.Length < 20)
+            string[] clipGuids = AssetDatabase.FindAssets("t:AnimationClip", new[] { "Assets/Resources/Animations/Imported" });
+            int legacyClipCount = 0;
+            foreach (string guid in clipGuids)
             {
-                Debug.LogError("[KAVEH PREFLIGHT] Expected at least 20 imported animation clips; found " + clips.Length + ". Run 'Kaveh Rising/Build Rigged Character Prefabs' first.");
+                string clipPath = AssetDatabase.GUIDToAssetPath(guid);
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+                if (clip && clip.legacy) legacyClipCount++;
+            }
+
+            if (clipGuids.Length < 20 || legacyClipCount < 20)
+            {
+                Debug.LogError("[KAVEH PREFLIGHT] Expected at least 20 imported legacy animation clips; found " +
+                    clipGuids.Length + " clip(s), " + legacyClipCount + " legacy. Run 'Kaveh Rising/Build Rigged Character Prefabs' first.");
                 errors++;
             }
             else
             {
-                Debug.Log("[KAVEH PREFLIGHT] Imported animation clips: " + clips.Length);
+                Debug.Log("[KAVEH PREFLIGHT] Imported legacy animation clips: " + legacyClipCount);
             }
 
             var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).ToArray();
