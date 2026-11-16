@@ -983,7 +983,7 @@ func _interact() -> void:
 	if is_instance_valid(cage):
 		cage.queue_free()
 	rescue_targets.remove_at(nearest_index)
- 	rescued += 1
+	rescued += 1
 	rescued_this_chapter += 1
 	_play_anim(player,"General/Interact")
 	_play_sfx("door")
