@@ -55,7 +55,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/godot/templates"
           unzip -q "$RUNNER_TEMP/godot/templates.tpz" -d "$RUNNER_TEMP/godot/templates"
           cp -a "$RUNNER_TEMP/godot/templates/templates/." "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
-          echo "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_PATH"
+          GODOT_BIN="$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          test -f "$GODOT_BIN"
+          chmod +x "$GODOT_BIN"
+          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+          echo "Godot executable prepared at $GODOT_BIN"
 
       - name: Import and validate project
         run: |
