@@ -1,54 +1,64 @@
-name: Android build and tests
+name: Godot Android APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "GodotProject/**"
+      - ".github/workflows/android.yml"
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Test and build Debug APK
+  build:
+    name: Validate Godot project and export Android APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Install Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Configure preinstalled Android SDK
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Download Godot 4.7.2 and matching export templates
         shell: bash
         run: |
-          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
-          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
-          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [[ ! -x "$SDKMANAGER" ]]; then
-            SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)"
-          fi
-          if [[ ! -x "$SDKMANAGER" ]]; then
-            echo "Android SDK manager not found under $SDK_ROOT" >&2
-            exit 1
-          fi
-          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses || true
-          "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          set -euo pipefail
+          GODOT_VERSION="4.7.2"
+          mkdir -p "$RUNNER_TEMP/godot" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          curl -fL "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o "$RUNNER_TEMP/godot/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot/godot.zip" -d "$RUNNER_TEMP/godot"
+          curl -fL "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -o "$RUNNER_TEMP/godot/templates.tpz"
+          mkdir -p "$RUNNER_TEMP/godot/templates"
+          unzip -q "$RUNNER_TEMP/godot/templates.tpz" -d "$RUNNER_TEMP/godot/templates"
+          cp -a "$RUNNER_TEMP/godot/templates/templates/." "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+          echo "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_PATH"
 
-      - name: Run unit tests and build APK
-        run: gradle testDebugUnitTest assembleDebug --no-daemon
+      - name: Import and validate project
+        run: |
+          godot --headless --editor --path GodotProject --quit
 
-      - name: Upload Debug APK
+      - name: Export Android debug APK
+        run: |
+          mkdir -p GodotProject/build
+          godot --headless --path GodotProject --export-debug "Android" GodotProject/build/KAVEH-RISING-debug.apk
+
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: KAVEH-RISING-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: KAVEH-RISING-Android-debug
+          path: GodotProject/build/KAVEH-RISING-debug.apk
           if-no-files-found: error
           retention-days: 14
