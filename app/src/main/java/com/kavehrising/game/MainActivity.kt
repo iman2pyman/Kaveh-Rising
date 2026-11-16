@@ -88,20 +88,40 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
     private fun drawHud(canvas: Canvas, w: Float, h: Float) {
         val chapter = ChapterData.chapters[chapterIndex]
+        paint.textAlign = Paint.Align.CENTER
         paint.color = Color.rgb(230, 174, 77)
         paint.textSize = min(w, h) * .052f
-        paint.textAlign = Paint.Align.CENTER
         canvas.drawText("قیام کاوه | " + chapter.titleFa, w / 2, h * .075f, paint)
+
         paint.color = Color.rgb(245, 220, 195)
         paint.textSize = min(w, h) * .032f
         canvas.drawText(chapter.subtitleFa, w / 2, h * .12f, paint)
+        paint.textSize = min(w, h) * .029f
+        canvas.drawText("فصل ${chapterIndex + 1} از ${ChapterData.chapters.size}", w / 2, h * .16f, paint)
+
+        // Compact health bars make combat status readable at a glance.
+        val barWidth = w * .30f
+        val barHeight = h * .018f
+        val left = w * .10f
+        val right = w * .60f
+        val top = h * .19f
+        paint.color = Color.rgb(65, 35, 27)
+        canvas.drawRoundRect(RectF(left, top, left + barWidth, top + barHeight), 8f, 8f, paint)
+        canvas.drawRoundRect(RectF(right, top, right + barWidth, top + barHeight), 8f, 8f, paint)
+        paint.color = Color.rgb(190, 55, 45)
+        canvas.drawRoundRect(RectF(left, top, left + barWidth * (health / 3f).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
+        paint.color = Color.rgb(225, 165, 55)
+        val enemyMax = chapter.enemyHealth.toFloat()
+        canvas.drawRoundRect(RectF(right, top, right + barWidth * (enemyHealth / enemyMax).coerceIn(0f, 1f), top + barHeight), 8f, 8f, paint)
+
         paint.color = Color.WHITE
-        paint.textSize = min(w, h) * .038f
-        canvas.drawText("سلامتی کاوه: $health     جان دشمن: $enemyHealth", w / 2, h * .17f, paint)
+        paint.textSize = min(w, h) * .029f
+        canvas.drawText("سلامتی کاوه: $health / 3", left + barWidth / 2, top + h * .045f, paint)
+        canvas.drawText("${chapter.enemyNameFa}: $enemyHealth / ${chapter.enemyHealth}", right + barWidth / 2, top + h * .045f, paint)
         if (System.currentTimeMillis() < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
             paint.textSize = min(w, h) * .033f
-            canvas.drawText(message, w / 2, h * .23f, paint)
+            canvas.drawText(message, w / 2, h * .29f, paint)
         }
     }
 
