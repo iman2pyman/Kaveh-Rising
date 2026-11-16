@@ -63,12 +63,22 @@ jobs:
           "$GODOT_BIN" --version
 
       - name: Import and validate project
+        shell: bash
         run: |
-          "$GODOT_BIN" --headless --editor --path GodotProject --quit
+          set -o pipefail
+          "$GODOT_BIN" --headless --editor --path GodotProject --quit 2>&1 | tee "$RUNNER_TEMP/godot-import.log"
+          if grep -E "SCRIPT ERROR:|Parse Error:|ERROR: Failed to load script" "$RUNNER_TEMP/godot-import.log"; then
+            echo "Godot script validation failed"
+            exit 1
+          fi
 
       - name: Probe imported character rigs and animation libraries
         run: |
           "$GODOT_BIN" --headless --path GodotProject --script res://tools/asset_probe.gd
+
+      - name: Run campaign gameplay smoke test
+        run: |
+          "$GODOT_BIN" --headless --path GodotProject --script res://tools/game_smoke_test.gd
 
       - name: Export Android debug APK
         run: |
