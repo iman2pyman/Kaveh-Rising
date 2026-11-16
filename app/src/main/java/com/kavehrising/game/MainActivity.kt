@@ -259,6 +259,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.color = Color.rgb(255, 220, 145)
         paint.textSize = min(w, h) * .028f
         canvas.drawText("امتیاز: $score   |   رکورد: $bestScore", w / 2, h * .255f, paint)
+        paint.textSize = min(w, h) * .023f
+        paint.color = if (now < heavyAttackReadyAt) Color.LTGRAY else Color.rgb(255, 205, 105)
+        canvas.drawText(
+            if (now < heavyAttackReadyAt) "ضربه سنگین: ${((heavyAttackReadyAt - now + 999L) / 1000L)} ثانیه" else "ضربه سنگین آماده است؛ گوشه راست میدان را لمس کن",
+            w / 2, h * .285f, paint
+        )
         val now = System.currentTimeMillis()
         if (now < messageUntil) {
             paint.color = Color.rgb(255, 210, 120)
@@ -386,8 +392,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         val now = System.currentTimeMillis()
         val dodgeLabel = if (now < dodgeCooldownUntil) "جاخالی…" else "جاخالی"
         drawButton(canvas, RectF(w * .51f, h * .84f, w * .72f, h * .96f), dodgeLabel)
-        val heavyLabel = if (now < heavyAttackReadyAt) "سنگین…" else "ضربه سنگین"
-        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), heavyLabel)
+        drawButton(canvas, RectF(w * .74f, h * .84f, w * .97f, h * .96f), "⚒ حمله")
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
@@ -495,8 +500,11 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 event.x < w * .26f -> playerX = (playerX - .075f).coerceIn(.08f, .92f)
                 event.x < w * .50f -> playerX = (playerX + .075f).coerceIn(.08f, .92f)
                 event.x < w * .73f -> dodge()
-                else -> heavyAttack()
+                else -> attack()
             }
+        } else if (event.y > h * .34f && event.x > w * .78f) {
+            // The upper-right arena area activates the charged hammer strike.
+            heavyAttack()
         } else {
             playerX = (playerX + if (event.x > w / 2) .05f else -.05f).coerceIn(.08f, .92f)
         }
