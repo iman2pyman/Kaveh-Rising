@@ -6,12 +6,12 @@ namespace KavehRising
     {
         float nextStrike, nextPatrol;
         Vector3 patrolTarget;
-        HumanoidAnimationDriver animationDriver;
+        HumanoidAnimationDriver animationDriver; RiggedCharacterAnimation rigAnimation;
         public bool IsDead { get; private set; }
 
         void Awake()
         {
-            animationDriver = GetComponentInChildren<HumanoidAnimationDriver>();
+            animationDriver = GetComponentInChildren<HumanoidAnimationDriver>(); rigAnimation=GetComponent<RiggedCharacterAnimation>();
             patrolTarget = transform.position + Vector3.left * 3f;
         }
         void Update()
