@@ -28,8 +28,10 @@ namespace KavehRising
         {
             if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}
             Instance=this; Application.targetFrameRate=60; Screen.orientation=ScreenOrientation.LandscapeLeft;
-            LoadProgress(); StartChapter(false);
+            LoadProgress();
             if(!FindObjectOfType<GameAudio>())gameObject.AddComponent<GameAudio>();
+            if(!FindObjectOfType<VoiceDialogueDirector>())gameObject.AddComponent<VoiceDialogueDirector>();
+            StartChapter(false);
         }
         public void RegisterActors(PlayerMotor p,EnemyBrain e){Player=p;Enemy=e;}
         public ChapterData Current=>Chapters[Mathf.Clamp(Chapter,0,Chapters.Length-1)];
@@ -62,7 +64,7 @@ namespace KavehRising
             IsPaused=false;IsGameOver=false;IsVictory=false;if(resetHealth)Health=5;
             HasPotion=true;EnemyHealth=Current.enemyHealth;
             if(Player!=null)Destroy(Player.gameObject);if(Enemy!=null)Destroy(Enemy.gameObject);
-            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);SaveProgress();
+            RuntimeWorld.BuildEnvironment(Current);RuntimeWorld.SpawnActors(this);\n            var dialogue=FindObjectOfType<VoiceDialogueDirector>(); if(dialogue)dialogue.PlayChapter(Chapter);\n            SaveProgress();
         }
         void SaveProgress(){PlayerPrefs.SetInt("kr_chapter",Chapter);PlayerPrefs.SetInt("kr_unlocked",UnlockedChapter);PlayerPrefs.SetInt("kr_score",Score);PlayerPrefs.Save();}
         void LoadProgress(){Chapter=Mathf.Clamp(PlayerPrefs.GetInt("kr_chapter",0),0,Chapters.Length-1);UnlockedChapter=Mathf.Clamp(PlayerPrefs.GetInt("kr_unlocked",0),0,Chapters.Length-1);Chapter=Mathf.Min(Chapter,UnlockedChapter);Score=PlayerPrefs.GetInt("kr_score",0);}
