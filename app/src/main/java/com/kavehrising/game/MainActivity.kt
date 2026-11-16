@@ -104,7 +104,8 @@ private class KavehGameView(private val host: Activity) : View(host) {
 
         if (!gameOver && !won && !paused) {
             updateEnemy()
-            postInvalidateDelayed(70)
+            // A modest refresh rate keeps the simple Canvas game responsive while reducing CPU use.
+            postInvalidateDelayed(100)
         }
         if (paused) drawOverlay(canvas, w, h, "بازی متوقف شد", "برای ادامه، صفحه را لمس کن")
         if (gameOver) drawOverlay(canvas, w, h, "کاوه شکست خورد", "برای تلاش دوباره لمس کن")
