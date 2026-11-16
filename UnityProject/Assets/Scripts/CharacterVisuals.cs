@@ -8,7 +8,7 @@ namespace KavehRising
         public bool IsBoss;
         public bool IsHero;
         public Transform Weapon;
-        Transform leftArm, rightArm, leftLeg, rightLeg;
+        Transform leftArm, rightArm, leftLeg, rightLeg, hammer;\n        float attackTime, attackDuration; bool heavyAttack;
         Vector3 armRest, legRest;
         float phase;
 
@@ -62,21 +62,21 @@ namespace KavehRising
             Part("Right bracer",PrimitiveType.Cube,new Vector3(.49f,-.02f,.02f),new Vector3(.28f,.2f,.28f),bronze,transform);
             if(IsHero)
             {
-                var h=Part("Hammer handle",PrimitiveType.Cylinder,new Vector3(.66f,.02f,.2f),new Vector3(.075f,.55f,.075f),leather,transform);
+                var h=Part("Hammer handle",PrimitiveType.Cylinder,new Vector3(.66f,.02f,.2f),new Vector3(.075f,.55f,.075f),leather,transform); hammer=h.transform;
                 h.transform.localRotation=Quaternion.Euler(0,0,-15);
                 Part("Forged hammer head",PrimitiveType.Cube,new Vector3(.72f,.34f,.2f),new Vector3(.42f,.2f,.25f),steel,transform);
             }
             phase=Random.value*6f;
         }
-        void Update()
+        public void PlayAttack(bool heavy){heavyAttack=heavy;attackDuration=heavy?.58f:.32f;attackTime=attackDuration;}\n        void Update()
         {
-            float speed=GameRoot.Instance!=null && GameRoot.Instance.Player==GetComponent<PlayerMotor>()?Mathf.Abs(Input.GetAxisRaw("Horizontal")):0f;
+            float speed=GetComponent<PlayerMotor>()?GetComponent<PlayerMotor>().MoveAmount:0f;
             phase+=Time.deltaTime*(speed>.1f?9f:2f);
             float swing=Mathf.Sin(phase)*Mathf.Clamp01(speed);
             leftLeg.localRotation=Quaternion.Euler(swing*24,0,0);
             rightLeg.localRotation=Quaternion.Euler(-swing*24,0,0);
             leftArm.localRotation=Quaternion.Euler(-swing*18,0,0);
-            rightArm.localRotation=Quaternion.Euler(swing*18,0,0);
+            rightArm.localRotation=Quaternion.Euler(swing*18,0,0);\n            if(attackTime>0){float t=1f-attackTime/attackDuration;float arc=Mathf.Sin(t*Mathf.PI)*(heavyAttack?105f:72f);rightArm.localRotation=Quaternion.Euler(-arc,0,heavyAttack?18f:8f);attackTime-=Time.deltaTime;}
         }
     }
 }
