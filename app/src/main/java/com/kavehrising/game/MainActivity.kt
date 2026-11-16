@@ -40,6 +40,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     // One reusable geometry object avoids repeated RectF allocations while drawing.
     private val reusableRect = RectF()
+    private val kavehSprite by lazy { host.getDrawable(R.drawable.kaveh_hero) }
+    private val zahhakSprite by lazy { host.getDrawable(R.drawable.zahhak_boss) }
+    private val sceneDetail by lazy { host.getDrawable(R.drawable.scene_detail) }
     private val prefs = host.getPreferences(Activity.MODE_PRIVATE)
     private var chapterIndex = prefs.getInt("chapter", 0).coerceIn(0, ChapterData.chapters.lastIndex)
     private var score = prefs.getInt("score", 0).coerceAtLeast(0)
@@ -209,6 +212,12 @@ private class KavehGameView(private val host: Activity) : View(host) {
                 canvas.drawCircle(w * .815f, h * .35f, w * .065f, paint)
             }
         }
+        // Original vector-art detail layer adds ruins, towers and atmospheric depth
+        // to every chapter while keeping the APK resolution-independent.
+        sceneDetail?.alpha = 115
+        sceneDetail?.setBounds(0, 0, width, height)
+        sceneDetail?.draw(canvas)
+
     }
 
     private fun enemyStepInterval(): Long {
@@ -317,18 +326,26 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawCharacter(canvas: Canvas, x: Float, ground: Float, hero: Boolean) {
-        paint.color = if (hero) Color.rgb(218, 165, 65) else Color.rgb(125, 45, 35)
-        canvas.drawCircle(x, ground - height * .12f, height * .045f, paint)
-        paint.strokeWidth = height * .018f
-        canvas.drawLine(x, ground - height * .075f, x, ground - height * .015f, paint)
-        canvas.drawLine(x, ground - height * .055f, x - width * .045f, ground - height * .025f, paint)
-        canvas.drawLine(x, ground - height * .055f, x + width * .045f, ground - height * .025f, paint)
-        canvas.drawLine(x, ground - height * .015f, x - width * .03f, ground, paint)
-        canvas.drawLine(x, ground - height * .015f, x + width * .03f, ground, paint)
-        if (hero) {
-            paint.color = Color.rgb(245, 190, 75)
-            canvas.drawLine(x + width * .045f, ground - height * .03f, x + width * .09f, ground - height * .10f, paint)
+        val sprite = if (hero) kavehSprite else null
+        if (sprite == null) {
+            paint.color = Color.rgb(125, 45, 35)
+            canvas.drawCircle(x, ground - height * .12f, height * .045f, paint)
+            paint.strokeWidth = height * .018f
+            canvas.drawLine(x, ground - height * .075f, x, ground - height * .015f, paint)
+            canvas.drawLine(x, ground - height * .055f, x - width * .045f, ground - height * .025f, paint)
+            canvas.drawLine(x, ground - height * .055f, x + width * .045f, ground - height * .025f, paint)
+            canvas.drawLine(x, ground - height * .015f, x - width * .03f, ground, paint)
+            canvas.drawLine(x, ground - height * .015f, x + width * .03f, ground, paint)
+            return
         }
+        val spriteWidth = width * .115f
+        val spriteHeight = height * .30f
+        val bob = if (System.currentTimeMillis() % 900L < 450L) height * .006f else 0f
+        sprite.setBounds(
+            (x - spriteWidth / 2f).toInt(), (ground - spriteHeight + bob).toInt(),
+            (x + spriteWidth / 2f).toInt(), (ground + bob).toInt()
+        )
+        sprite.draw(canvas)
     }
 
     private fun drawAttackEffect(canvas: Canvas, w: Float, h: Float) {
@@ -383,6 +400,20 @@ private class KavehGameView(private val host: Activity) : View(host) {
     }
 
     private fun drawEnemy(canvas: Canvas, x: Float, ground: Float) {
+        if (chapterIndex == ChapterData.chapters.lastIndex) {
+            val spriteWidth = width * .155f
+            val spriteHeight = height * .34f
+            zahhakSprite?.setBounds(
+                (x - spriteWidth / 2f).toInt(), (ground - spriteHeight).toInt(),
+                (x + spriteWidth / 2f).toInt(), ground.toInt()
+            )
+            zahhakSprite?.draw(canvas)
+            paint.color = Color.rgb(255, 224, 177)
+            paint.textAlign = Paint.Align.CENTER
+            paint.textSize = height * .032f
+            canvas.drawText(ChapterData.chapters[chapterIndex].enemyNameFa, x, ground + height * .045f, paint)
+            return
+        }
         drawCharacter(canvas, x, ground, false)
         val headY = ground - height * .12f
         val scale = height * .01f
