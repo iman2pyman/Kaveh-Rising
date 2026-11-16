@@ -11,6 +11,7 @@ namespace KavehRising.Editor
         [MenuItem("Kaveh Rising/Build Android APK")]
         public static void Build()
         {
+            CharacterPrefabBuilder.BuildPrefabs();
             Directory.CreateDirectory("Assets/Scenes");
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             var go=new GameObject("Bootstrap");
