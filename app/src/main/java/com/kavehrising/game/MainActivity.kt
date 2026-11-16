@@ -21,10 +21,10 @@ class MainActivity : Activity() {
 
 private class KavehGameView : View {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var playerX = 0.22f
+    private var chapterIndex = 0\n    private var playerX = 0.22f
     private var enemyX = 0.78f
     private var health = 3
-    private var enemyHealth = 5
+    private var enemyHealth = ChapterData.chapters[0].enemyHealth
     private var hitCooldown = 0L
     private var lastEnemyStep = 0L
     private var gameOver = false
@@ -82,7 +82,7 @@ private class KavehGameView : View {
         paint.color = Color.rgb(230, 174, 77)
         paint.textSize = min(w, h) * .055f
         paint.textAlign = Paint.Align.CENTER
-        canvas.drawText("قیام کاوه | مرحله نخست", w / 2, h * .08f, paint)
+        canvas.drawText("قیام کاوه | " + ChapterData.chapters[chapterIndex].titleFa, w / 2, h * .08f, paint)
         paint.color = Color.WHITE
         paint.textSize = min(w, h) * .04f
         canvas.drawText("سلامتی: $health     جان دشمن: $enemyHealth", w / 2, h * .14f, paint)
@@ -112,7 +112,7 @@ private class KavehGameView : View {
         paint.color = Color.rgb(35, 10, 8)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = height * .035f
-        canvas.drawText("نگهبان ضحاک", x, ground + height * .045f, paint)
+        canvas.drawText(ChapterData.chapters[chapterIndex].enemyNameFa, x, ground + height * .045f, paint)
     }
 
     private fun drawButton(canvas: Canvas, rect: RectF, label: String) {
