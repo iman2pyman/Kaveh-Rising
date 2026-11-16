@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if not active or ended:
 		return
-	var dir := Vector3(move.x, 0.0, move.y)
+	var dir: Vector3 = Vector3(move.x, 0.0, move.y)
 	if dir.length() > 1.0:
 		dir = dir.normalized()
 	player.velocity.x = dir.x * SPEED
@@ -281,7 +281,7 @@ func _make_player() -> void:
 func _make_humanoid(body: CharacterBody3D, hero: bool, tunic: Color, armor: Color, size: float) -> void:
 	if _attach_rigged_model(body, hero, size):
 		return
-	var visual := Node3D.new()
+	var visual: Node3D = Node3D.new()
 	visual.name = "Visual"
 	visual.scale = Vector3.ONE * size
 	body.add_child(visual)
@@ -716,13 +716,13 @@ func _update_enemies(delta: float) -> void:
 		if not is_instance_valid(enemy):
 			enemies.erase(enemy)
 			continue
-		var offset := player.global_position-enemy.global_position
+		var offset: Vector3 = player.global_position-enemy.global_position
 		offset.y = 0
-		var distance := offset.length()
+		var distance: float = offset.length()
 		var reach := 2.2 if enemy.get_meta("kind") == "boss" else 1.6
 		if distance > reach:
 			_play_anim(enemy,"Movement/Running_A")
-			var dir := offset.normalized()
+			var dir: Vector3 = offset.normalized()
 			enemy.velocity.x = dir.x*float(enemy.get_meta("speed"))
 			enemy.velocity.z = dir.z*float(enemy.get_meta("speed"))
 			enemy.rotation.y = atan2(-dir.x,-dir.z)
@@ -740,7 +740,7 @@ func _update_enemies(delta: float) -> void:
 		enemy.move_and_slide()
 		enemy.position.x = clampf(enemy.position.x,-15.2,15.2)
 		enemy.position.z = clampf(enemy.position.z,-15.2,15.2)
-		var visual := enemy.get_node_or_null("Visual")
+		var visual: Node = enemy.get_node_or_null("Visual")
 		if visual:
 			var phase := float(enemy.get_meta("phase"))+delta*7
 			enemy.set_meta("phase",phase)
@@ -763,7 +763,7 @@ func _attack() -> void:
 	for enemy in enemies.duplicate():
 		if not is_instance_valid(enemy):
 			continue
-		var offset := enemy.global_position-player.global_position
+		var offset: Vector3 = enemy.global_position-player.global_position
 		var reach := 3.0 if enemy.get_meta("kind") == "boss" else 2.7
 		if offset.length() <= reach and (-player.global_transform.basis.z).dot(offset.normalized()) > -0.15:
 			var hp := maxf(0,float(enemy.get_meta("hp"))-DAMAGE-(8 if chapter == 8 else 0))
@@ -790,7 +790,7 @@ func _dodge() -> void:
 	_play_anim(player,"Advanced/Dodge_Backward")
 	_play_sfx("armor")
 	stamina -= 25
-	var dir := Vector3(move.x,0,move.y)
+	var dir: Vector3 = Vector3(move.x,0,move.y)
 	if dir.length() < 0.1:
 		dir = -player.global_transform.basis.z
 	player.velocity.x = dir.normalized().x*12
@@ -897,8 +897,8 @@ func _update_counts() -> void:
 	coin_text.text = "سکه: %d" % coins
 
 func _update_target_bar() -> void:
-	var nearest: CharacterBody3D
-	var distance := 999.0
+	var nearest: CharacterBody3D = null
+	var distance: float = 999.0
 	for enemy in enemies:
 		if is_instance_valid(enemy):
 			var d := player.global_position.distance_to(enemy.global_position)
