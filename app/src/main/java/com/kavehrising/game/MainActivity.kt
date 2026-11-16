@@ -401,6 +401,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         }
         if (storyIntro && !gameOver && !won) {
             storyIntro = false
+            saveGameState()
             invalidate()
             return true
         }
@@ -430,6 +431,9 @@ private class KavehGameView(private val host: Activity) : View(host) {
         } else {
             playerX = (playerX + if (event.x > w / 2) .05f else -.05f).coerceIn(.08f, .92f)
         }
+        // Preserve the latest player position even if Android stops the app
+        // before the next enemy update.
+        saveGameState()
         invalidate()
         return true
     }
