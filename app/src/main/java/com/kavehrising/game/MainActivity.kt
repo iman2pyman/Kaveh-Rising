@@ -38,6 +38,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var lastEnemyStep = System.currentTimeMillis()
     private var storyIntro = true
     private var paused = false
+    private var potionUsed = false
     private var gameOver = false
     private var won = false
     private var message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
@@ -178,6 +179,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         canvas.drawText(chapter.subtitleFa, w / 2, h * .12f, paint)
         paint.textSize = min(w, h) * .029f
         canvas.drawText("فصل ${chapterIndex + 1} از ${ChapterData.chapters.size}", w / 2, h * .16f, paint)
+        drawButton(canvas, RectF(w * .03f, h * .035f, w * .19f, h * .105f), if (potionUsed) "معجون×" else "معجون")
         drawButton(canvas, RectF(w * .83f, h * .035f, w * .97f, h * .105f), "Ⅱ")
 
         // Compact health bars make combat status readable at a glance.
@@ -325,7 +327,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
             invalidate()
             return true
         }
-        if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
+        if (event.y < h * .13f && event.x < w * .20f && !storyIntro && !gameOver && !won) {\n            usePotion()\n            invalidate()\n            return true\n        }\n        if (event.y < h * .13f && event.x > w * .80f && !storyIntro && !gameOver && !won) {
             paused = true
             invalidate()
             return true
@@ -365,7 +367,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         return true
     }
 
-    private fun dodge() {
+    private fun usePotion() {\n        val now = System.currentTimeMillis()\n        if (potionUsed) {\n            message = "معجون این فصل مصرف شده است"\n        } else if (health >= 3) {\n            message = "سلامتی کاوه کامل است"\n        } else {\n            health = (health + 1).coerceAtMost(3)\n            potionUsed = true\n            message = "معجون درمانی مصرف شد؛ یک واحد سلامتی بازیابی شد"\n        }\n        messageUntil = now + 1400L\n    }\n\n    private fun dodge() {
         val now = System.currentTimeMillis()
         if (now < dodgeCooldownUntil) {
             message = "جاخالی هنوز آماده نیست"
