@@ -43,9 +43,42 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: weapon sound effect did not import")
 		quit(8)
 		return
+	game.call("_begin_chapter",3)
+	await process_frame
+	var targets: Array = game.get("rescue_targets")
+	if targets.size() != 3:
+		push_error("SMOKE_FAIL: prison chapter did not create three rescue targets")
+		quit(9)
+		return
+	var rescued_before := int(game.get("rescued"))
+	game.call("_interact")
+	if int(game.get("rescued")) != rescued_before:
+		push_error("SMOKE_FAIL: rescue interaction worked from outside the cage area")
+		quit(10)
+		return
+	var person := targets[0].get("person") as Node3D
+	hero.global_position = person.global_position + Vector3(0,0,1)
+	game.call("_interact")
+	if int(game.get("rescued_this_chapter")) != 1:
+		push_error("SMOKE_FAIL: nearby prisoner could not be rescued")
+		quit(11)
+		return
+	game.call("_begin_chapter",9)
+	await process_frame
+	var boss_list: Array = game.get("enemies")
+	if boss_list.size() != 1:
+		push_error("SMOKE_FAIL: final boss did not spawn")
+		quit(12)
+		return
+	var boss := boss_list[0] as CharacterBody3D
+	var boss_visual := boss.get_node_or_null("Visual")
+	if boss_visual == null or boss_visual.get_node_or_null("SerpentHead_1") == null:
+		push_error("SMOKE_FAIL: Zahhak's serpent heads were not created")
+		quit(13)
+		return
 	hero_anim.play("Movement/Running_A")
 	for i in range(20):
 		await process_frame
-	print("SMOKE_OK: campaign start, rigged hero/enemy, imported animations and SFX verified")
+	print("SMOKE_OK: campaign, rigged characters, animation sets, SFX, proximity rescue and Zahhak boss verified")
 	game.queue_free()
 	quit(0)
