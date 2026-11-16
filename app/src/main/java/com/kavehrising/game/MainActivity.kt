@@ -12,11 +12,19 @@ import kotlin.math.abs
 import kotlin.math.min
 
 class MainActivity : Activity() {
+    private lateinit var gameView: KavehGameView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.statusBarColor = Color.rgb(25, 13, 9)
         window.navigationBarColor = Color.rgb(25, 13, 9)
-        setContentView(KavehGameView(this))
+        gameView = KavehGameView(this)
+        setContentView(gameView)
+    }
+
+    override fun onPause() {
+        if (::gameView.isInitialized) gameView.saveGameState()
+        super.onPause()
     }
 }
 
@@ -26,23 +34,40 @@ private class KavehGameView(private val host: Activity) : View(host) {
     private var chapterIndex = prefs.getInt("chapter", 0).coerceIn(0, ChapterData.chapters.lastIndex)
     private var score = prefs.getInt("score", 0).coerceAtLeast(0)
     private var bestScore = prefs.getInt("best_score", 0).coerceAtLeast(0)
-    private var playerX = 0.22f
-    private var enemyX = 0.78f
-    private var health = 3
-    private var enemyHealth = ChapterData.chapters[chapterIndex].enemyHealth
+    private var playerX = prefs.getFloat("player_x", 0.22f).coerceIn(.08f, .92f)
+    private var enemyX = prefs.getFloat("enemy_x", 0.78f).coerceIn(.08f, .92f)
+    private var health = prefs.getInt("health", 3).coerceIn(0, 3)
+    private var enemyHealth = prefs.getInt("enemy_health", ChapterData.chapters[chapterIndex].enemyHealth)
+        .coerceIn(0, ChapterData.chapters[chapterIndex].enemyHealth)
     private var hitCooldown = 0L
     private var attackEffectUntil = 0L
     private var attackEffectHit = false
     private var dodgeCooldownUntil = 0L
     private var dodgeActiveUntil = 0L
     private var lastEnemyStep = System.currentTimeMillis()
-    private var storyIntro = true
+    private var storyIntro = prefs.getBoolean("story_intro", true)
     private var paused = false
-    private var potionUsed = false
-    private var gameOver = false
-    private var won = false
+    private var potionUsed = prefs.getBoolean("potion_used", false)
+    private var gameOver = prefs.getBoolean("game_over", false)
+    private var won = prefs.getBoolean("won", false)
     private var message = "کاوه را حرکت بده؛ نزدیک دشمن شو و حمله کن"
     private var messageUntil = System.currentTimeMillis() + 4000L
+
+    fun saveGameState() {
+        prefs.edit()
+            .putInt("chapter", chapterIndex)
+            .putInt("score", score)
+            .putInt("best_score", bestScore)
+            .putFloat("player_x", playerX)
+            .putFloat("enemy_x", enemyX)
+            .putInt("health", health)
+            .putInt("enemy_health", enemyHealth)
+            .putBoolean("story_intro", storyIntro)
+            .putBoolean("potion_used", potionUsed)
+            .putBoolean("game_over", gameOver)
+            .putBoolean("won", won)
+            .apply()
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
