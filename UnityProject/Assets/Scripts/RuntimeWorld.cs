@@ -113,10 +113,10 @@ namespace KavehRising
             }
             else { var fallback=hero.AddComponent<CharacterVisuals>(); fallback.IsHero=true; }
             if(!hero.GetComponent<PlayerMotor>())hero.AddComponent<PlayerMotor>();
-            var foe=new GameObject(root.Current.enemyName); foe.transform.position=prefab?new Vector3(3,0,0):new Vector3(3,1,0);
-            if(prefab)
+            var foe=new GameObject(root.Current.enemyName); foe.transform.position=foePrefab?new Vector3(3,0,0):new Vector3(3,1,0);
+            if(foePrefab)
             {
-                var model=Object.Instantiate(prefab,foe.transform); model.name="Enemy rigged humanoid"; model.transform.localPosition=Vector3.zero; model.transform.localRotation=Quaternion.identity; model.transform.localScale=Vector3.one*(root.Chapter==9?1.22f:1.08f);
+                var model=Object.Instantiate(foePrefab,foe.transform); model.name="Enemy rigged humanoid"; model.transform.localPosition=Vector3.zero; model.transform.localRotation=Quaternion.identity; model.transform.localScale=Vector3.one*(root.Chapter==9?1.22f:1.08f);
                 foreach(var renderer in model.GetComponentsInChildren<Renderer>()) { renderer.material=new Material(renderer.material); renderer.material.color=root.Chapter==9?new Color(.48f,.12f,.16f):new Color(.32f,.38f,.34f); }
                 var animator=model.GetComponentInChildren<Animator>();
                 if(animator){animator.applyRootMotion=false;if(!animator.GetComponent<HumanoidAnimationDriver>())animator.gameObject.AddComponent<HumanoidAnimationDriver>();}
