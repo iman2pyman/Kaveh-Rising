@@ -22,6 +22,9 @@ var saved_chapter := 0
 var sfx_streams: Dictionary = {}
 var sfx_pool: Array[AudioStreamPlayer] = []
 var sfx_cursor := 0
+var sfx_volume := 0.8
+var pause_button: Button
+var pause_panel: PanelContainer
 var animation_library_cache: Dictionary = {}
 var footstep_clock := 0.0
 var active := false
@@ -114,7 +117,7 @@ func _setup_audio() -> void:
 	}
 	for i in range(4):
 		var player_sfx := AudioStreamPlayer.new()
-		player_sfx.volume_db = -5.0
+		player_sfx.volume_db = linear_to_db(maxf(0.001,sfx_volume))
 		add_child(player_sfx)
 		sfx_pool.append(player_sfx)
 
@@ -571,6 +574,16 @@ func _make_controls() -> void:
 	interact_button = _control_button("آزادسازی",Vector2(-150,-270),Vector2(130,60))
 	interact_button.pressed.connect(_interact)
 	interact_button.hide()
+	pause_button = Button.new()
+	pause_button.text = "Ⅱ"
+	pause_button.tooltip_text = "توقف بازی"
+	pause_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	pause_button.position = Vector2(-66,14)
+	pause_button.size = Vector2(52,48)
+	pause_button.add_theme_font_size_override("font_size",24)
+	pause_button.pressed.connect(_toggle_pause)
+	hud.add_child(pause_button)
+	pause_button.hide()
 
 func _control_button(caption: String, pos: Vector2, size: Vector2) -> Button:
 	var b := Button.new()
@@ -649,6 +662,7 @@ func _begin_chapter(index: int) -> void:
 	story.text = str(data.story)
 	_show_message(str(data.subtitle))
 	interact_button.visible = chapter == 3 or chapter == 4
+	pause_button.show()
 	_spawn_wave()
 
 func _spawn_wave() -> void:
@@ -1042,6 +1056,7 @@ func _chapter_complete() -> void:
 func _finish(won: bool) -> void:
 	ended = true
 	active = false
+	pause_button.hide()
 	var title := "آزادی ایران!" if won else "کاوه زخمی شد"
 	var body := "ضحاک شکست خورد و درفش کاویانی برافراشته شد.\nدشمنان شکست‌خورده: %d" % defeated if won else "این نبرد پایان راه نیست. دوباره برخیز و قیام را ادامه بده."
 	_dialog(title,body,"بازگشت به آغاز",func():
@@ -1152,6 +1167,62 @@ func _show_message(text_value: String) -> void:
 	message.text = text_value
 	message_cd = 2.7
 
+func _toggle_pause() -> void:
+	if not active or ended:
+		return
+	if get_tree().paused:
+		get_tree().paused = false
+		if is_instance_valid(pause_panel):
+			pause_panel.queue_free()
+		pause_panel = null
+		return
+	_save(chapter)
+	get_tree().paused = true
+	pause_panel = PanelContainer.new()
+	pause_panel.set_anchors_preset(Control.PRESET_CENTER)
+	pause_panel.position = Vector2(-190,-170)
+	pause_panel.custom_minimum_size = Vector2(380,340)
+	hud.add_child(pause_panel)
+	var box := VBoxContainer.new()
+	pause_panel.add_child(box)
+	var title := Label.new()
+	title.text = "بازی متوقف شد"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size",28)
+	box.add_child(title)
+	var volume_label := Label.new()
+	volume_label.text = "بلندی افکت‌های صوتی"
+	box.add_child(volume_label)
+	var volume := HSlider.new()
+	volume.min_value = 0.0
+	volume.max_value = 1.0
+	volume.step = 0.05
+	volume.value = sfx_volume
+	volume.value_changed.connect(_set_sfx_volume)
+	box.add_child(volume)
+	var resume := Button.new()
+	resume.text = "ادامه بازی"
+	resume.custom_minimum_size.y = 48
+	resume.pressed.connect(_toggle_pause)
+	box.add_child(resume)
+	var menu := Button.new()
+	menu.text = "ذخیره و بازگشت به منو"
+	menu.custom_minimum_size.y = 48
+	menu.pressed.connect(func():
+		get_tree().paused = false
+		pause_panel.queue_free()
+		pause_panel = null
+		active = false
+		_show_title()
+	)
+	box.add_child(menu)
+
+func _set_sfx_volume(value: float) -> void:
+	sfx_volume = clampf(value,0.0,1.0)
+	for player_sfx in sfx_pool:
+		player_sfx.volume_db = linear_to_db(maxf(0.001,sfx_volume))
+	_save(chapter)
+
 func _save(next_chapter: int) -> void:
 	saved_chapter = clampi(next_chapter,0,Chapters.chapter_count()-1)
 	var cfg := ConfigFile.new()
@@ -1164,6 +1235,7 @@ func _load_save() -> void:
 	if cfg.load("user://progress.cfg") == OK:
 		saved_chapter = clampi(int(cfg.get_value("campaign","chapter",0)),0,Chapters.chapter_count()-1)
 		coins = int(cfg.get_value("campaign","coins",0))
+		sfx_volume = clampf(float(cfg.get_value("settings","sfx_volume",0.8)),0.0,1.0)
 
 func _clear_enemies() -> void:
 	for enemy in enemies:
