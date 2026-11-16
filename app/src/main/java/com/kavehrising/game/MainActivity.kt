@@ -263,7 +263,7 @@ private class KavehGameView(private val host: Activity) : View(host) {
         paint.textSize = min(w, h) * .023f
         paint.color = if (now < heavyAttackReadyAt) Color.LTGRAY else Color.rgb(255, 205, 105)
         canvas.drawText(
-            if (now < heavyAttackReadyAt) "ضربه سنگین: ${((heavyAttackReadyAt - now + 999L) / 1000L)} ثانیه" else "ضربه سنگین آماده است؛ گوشه راست میدان را لمس کن",
+            if (now < heavyAttackReadyAt) "ضربه سنگین: ${((heavyAttackReadyAt - now + 999L) / 1000L)} ثانیه" else "ضربه سنگین آماده است؛ دکمه سنگین پایین صفحه را بزن",
             w / 2, h * .285f, paint
         )
         if (now < messageUntil) {
