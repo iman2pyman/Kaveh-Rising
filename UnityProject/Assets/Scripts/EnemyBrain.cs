@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace KavehRising
@@ -47,11 +48,19 @@ namespace KavehRising
             else if(Time.time>=nextStrike)
             {
                 nextStrike=Time.time+1.8f;
-                if(!root.Player.IsDodging)root.DamagePlayer(1);
                 if(animationDriver)animationDriver.PlayAttack(false);
                 if(rigAnimation)rigAnimation.PlayAttack(false);
+                StartCoroutine(StrikePlayer(root));
             }
         }
+        IEnumerator StrikePlayer(GameRoot root)
+        {
+            yield return new WaitForSeconds(.28f);
+            if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory||root.Player==null||IsDead)return;
+            if(Vector3.Distance(root.Player.transform.position,transform.position)<2.6f&&!root.Player.IsDodging)
+                root.DamagePlayer(1);
+        }
+
         public void MarkDead()
         {
             if(IsDead)return;

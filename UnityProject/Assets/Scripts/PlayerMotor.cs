@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 namespace KavehRising {
  [RequireComponent(typeof(CharacterController))]
@@ -28,10 +29,20 @@ namespace KavehRising {
   public void PlayHit(){if(animationDriver)animationDriver.PlayHit();if(rigAnimation)rigAnimation.PlayHit();}
   public void Attack(bool heavy){
    var root=GameRoot.Instance;if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory||Time.time<nextAttack)return;
-   nextAttack=Time.time+(heavy?1.25f:.48f);if(animationDriver)animationDriver.PlayAttack(heavy);if(rigAnimation)rigAnimation.PlayAttack(heavy);if(visuals)visuals.PlayAttack(heavy);
-   var target=root.Enemy;if(target==null||target.IsDead)return;Vector3 delta=target.transform.position-transform.position;delta.y=0;
-   bool front=delta.sqrMagnitude<.01f||Vector3.Dot(delta.normalized,transform.forward)>.05f;
-   if(delta.magnitude<=(heavy?3.6f:2.65f)&&front){root.DamageEnemy(heavy?3:1);CombatEffects.Burst(target.transform.position+Vector3.up,heavy?new Color(1f,.48f,.12f):Color.gray,heavy?28:14);var audio=FindObjectOfType<GameAudio>();if(audio)audio.PlayHit(heavy);}
+   nextAttack=Time.time+(heavy?1.25f:.48f);
+   if(animationDriver)animationDriver.PlayAttack(heavy);if(rigAnimation)rigAnimation.PlayAttack(heavy);if(visuals)visuals.PlayAttack(heavy);
+   StartCoroutine(ResolveAttack(heavy));
   }
- }
+  IEnumerator ResolveAttack(bool heavy){
+   yield return new WaitForSeconds(heavy ? .32f : .17f);
+   var root=GameRoot.Instance;if(root==null||root.IsPaused||root.IsGameOver||root.IsVictory)return;
+   var target=root.Enemy;if(target==null||target.IsDead)return;
+   Vector3 delta=target.transform.position-transform.position;delta.y=0;
+   bool front=delta.sqrMagnitude<.01f||Vector3.Dot(delta.normalized,transform.forward)>.05f;
+   if(delta.magnitude<=(heavy?3.6f:2.65f)&&front){
+    root.DamageEnemy(heavy?3:1);
+    CombatEffects.Burst(target.transform.position+Vector3.up,heavy?new Color(1f,.48f,.12f):Color.gray,heavy?28:14);
+    var audio=FindObjectOfType<GameAudio>();if(audio)audio.PlayHit(heavy);
+   }
+  } }
 }
