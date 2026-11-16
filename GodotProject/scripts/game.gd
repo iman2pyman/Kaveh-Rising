@@ -20,6 +20,7 @@ var saved_chapter := 0
 var sfx_streams: Dictionary = {}
 var sfx_pool: Array[AudioStreamPlayer] = []
 var sfx_cursor := 0
+var animation_library_cache: Dictionary = {}
 var footstep_clock := 0.0
 var active := false
 var ended := false
@@ -278,6 +279,8 @@ func _make_player() -> void:
 	add_child(player)
 
 func _make_humanoid(body: CharacterBody3D, hero: bool, tunic: Color, armor: Color, size: float) -> void:
+	if _attach_rigged_model(body, hero, size):
+		return
 	var visual := Node3D.new()
 	visual.name = "Visual"
 	visual.scale = Vector3.ONE * size
@@ -368,6 +371,101 @@ func _make_humanoid(body: CharacterBody3D, hero: bool, tunic: Color, armor: Colo
 		head_part.position.y = 0.45
 		head_part.material_override = _mat(Color(0.43,0.45,0.48))
 		hammer.add_child(head_part)
+
+func _attach_rigged_model(body: CharacterBody3D, hero: bool, size: float) -> bool:
+	var model_path := "res://assets/characters/Barbarian.fbx" if hero else "res://assets/characters/Mage.fbx"
+	var packed := load(model_path) as PackedScene
+	if packed == null:
+		push_warning("Rigged model unavailable, using procedural fallback: " + model_path)
+		return false
+	var model := packed.instantiate()
+	model.name = "Visual"
+	model.scale = Vector3.ONE * size
+	body.add_child(model)
+	var anim_player := AnimationPlayer.new()
+	anim_player.name = "CharacterAnimationPlayer"
+	anim_player.root_node = NodePath("..")
+	model.add_child(anim_player)
+	var animation_files := {
+		"Combat": "Rig_Medium_CombatMelee.glb",
+		"General": "Rig_Medium_General.glb",
+		"Advanced": "Rig_Medium_MovementAdvanced.glb",
+		"Movement": "Rig_Medium_MovementBasic.glb",
+		"Special": "Rig_Medium_Special.glb"
+	}
+	for library_name in animation_files:
+		var library := _get_animation_library(library_name, str(animation_files[library_name]))
+		if library != null:
+			anim_player.add_animation_library(library_name, library)
+	body.set_meta("anim_player", anim_player)
+	body.set_meta("rigged", true)
+	if hero:
+		hero_visual = model
+		hero_parts = {}
+		hammer = Node3D.new()
+		hammer.name = "WarHammer"
+		hammer.position = Vector3(0.52, 1.05, -0.30)
+		model.add_child(hammer)
+		var handle := MeshInstance3D.new()
+		var handle_mesh := CylinderMesh.new()
+		handle_mesh.height = 0.95
+		handle_mesh.top_radius = 0.055
+		handle_mesh.bottom_radius = 0.07
+		handle.mesh = handle_mesh
+		handle.rotation.z = -0.35
+		handle.material_override = _mat(Color(0.24, 0.13, 0.06))
+		hammer.add_child(handle)
+		var hammer_head := MeshInstance3D.new()
+		var head_mesh := BoxMesh.new()
+		head_mesh.size = Vector3(0.58, 0.28, 0.30)
+		hammer_head.mesh = head_mesh
+		hammer_head.position.y = 0.45
+		hammer_head.material_override = _mat(Color(0.44, 0.46, 0.49))
+		hammer.add_child(hammer_head)
+		_play_anim(body, "General/Idle_A")
+	else:
+		_play_anim(body, "General/Idle_A")
+	return true
+
+func _get_animation_library(library_name: String, file_name: String) -> AnimationLibrary:
+	if animation_library_cache.has(library_name):
+		return animation_library_cache[library_name]
+	var packed := load("res://assets/animations/" + file_name) as PackedScene
+	if packed == null:
+		push_warning("Animation library missing: " + file_name)
+		return null
+	var source_root := packed.instantiate()
+	var source_player := _find_animation_player(source_root)
+	if source_player == null:
+		source_root.free()
+		push_warning("AnimationPlayer missing in " + file_name)
+		return null
+	var library := AnimationLibrary.new()
+	for animation_name in source_player.get_animation_list():
+		var source_animation := source_player.get_animation(animation_name)
+		if source_animation != null:
+			library.add_animation(str(animation_name), source_animation.duplicate(true))
+	source_root.free()
+	animation_library_cache[library_name] = library
+	return library
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
+
+func _play_anim(body: CharacterBody3D, animation_name: String) -> void:
+	if not body.has_meta("anim_player"):
+		return
+	var anim_player := body.get_meta("anim_player") as AnimationPlayer
+	if anim_player == null or not anim_player.has_animation(animation_name):
+		return
+	if anim_player.current_animation != animation_name:
+		anim_player.play(animation_name)
 
 func _make_camera() -> void:
 	camera = Camera3D.new()
@@ -595,6 +693,7 @@ func _spawn_enemy(kind: String, pos: Vector3) -> void:
 			speed = 1.7
 			scale = 1.72
 	_make_humanoid(enemy,false,tunic,armor,scale)
+	_play_anim(enemy,"General/Idle_A")
 	var col := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()
 	shape.radius = 0.43*scale
@@ -622,11 +721,13 @@ func _update_enemies(delta: float) -> void:
 		var distance := offset.length()
 		var reach := 2.2 if enemy.get_meta("kind") == "boss" else 1.6
 		if distance > reach:
+			_play_anim(enemy,"Movement/Running_A")
 			var dir := offset.normalized()
 			enemy.velocity.x = dir.x*float(enemy.get_meta("speed"))
 			enemy.velocity.z = dir.z*float(enemy.get_meta("speed"))
 			enemy.rotation.y = atan2(-dir.x,-dir.z)
 		else:
+			_play_anim(enemy,"General/Idle_A")
 			enemy.velocity.x = 0
 			enemy.velocity.z = 0
 			var cd := float(enemy.get_meta("cooldown"))-delta
@@ -655,6 +756,7 @@ func _attack() -> void:
 	if not active or ended or attack_cd > 0:
 		return
 	attack_cd = 0.42
+	_play_anim(player,"Combat/Melee_1H_Attack_Chop")
 	_play_sfx("swing")
 	hammer.rotation.x = -1.0
 	var hit := false
@@ -685,6 +787,7 @@ func _dodge() -> void:
 	if not active or ended or dodge_cd > 0 or stamina < 25:
 		return
 	dodge_cd = 1.15
+	_play_anim(player,"Advanced/Dodge_Backward")
 	_play_sfx("armor")
 	stamina -= 25
 	var dir := Vector3(move.x,0,move.y)
@@ -698,6 +801,7 @@ func _dodge() -> void:
 func _interact() -> void:
 	if active and (chapter == 3 or chapter == 4):
 		rescued += 1
+		_play_anim(player,"General/Interact")
 		_play_sfx("door")
 		health = minf(MAX_HP,health+12)
 		hp_bar.value = health
@@ -709,6 +813,7 @@ func _take_damage(amount: float) -> void:
 	if invulnerable > 0:
 		return
 	health = maxf(0,health-amount)
+	_play_anim(player,"General/Hit_A")
 	_play_sfx("armor")
 	hp_bar.value = health
 	invulnerable = 0.45
@@ -812,15 +917,19 @@ func _animate_hero(delta: float) -> void:
 	if not is_instance_valid(hero_visual):
 		return
 	var moving := Vector2(player.velocity.x,player.velocity.z).length() > 0.5
-	var phase := float(hero_visual.get_meta("phase",0.0))+delta*(9 if moving else 2)
-	hero_visual.set_meta("phase",phase)
-	for key in hero_parts:
-		var part: Node3D = hero_parts[key]
-		part.rotation.x = sin(phase+(PI if str(key).begins_with("leg") else 0))* (0.42 if moving else 0.04)
-	if attack_cd > 0.2:
-		hammer.rotation.x = lerpf(hammer.rotation.x,-0.75,delta*18)
-	else:
-		hammer.rotation.x = lerpf(hammer.rotation.x,0,delta*12)
+	if attack_cd <= 0.2:
+		_play_anim(player,"Movement/Running_A" if moving else "General/Idle_A")
+	if not hero_parts.is_empty():
+		var phase := float(hero_visual.get_meta("phase",0.0))+delta*(9 if moving else 2)
+		hero_visual.set_meta("phase",phase)
+		for key in hero_parts:
+			var part: Node3D = hero_parts[key]
+			part.rotation.x = sin(phase+(PI if str(key).begins_with("leg") else 0))* (0.42 if moving else 0.04)
+	if is_instance_valid(hammer):
+		if attack_cd > 0.2:
+			hammer.rotation.x = lerpf(hammer.rotation.x,-0.75,delta*18)
+		else:
+			hammer.rotation.x = lerpf(hammer.rotation.x,0,delta*12)
 
 func _press_dir(dir: Vector2) -> void:
 	held[str(dir)] = dir
