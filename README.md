@@ -1,22 +1,26 @@
 # KAVEH RISING | قیام کاوه
 
-**Engine:** Unity 2022.3.62f1 — Android  
-**Primary project:** `UnityProject/`
+**Current engine:** Godot 4.7.2 — Android  
+**Active project:** `GodotProject/`  
+**Backup project:** `UnityProject/` (preserved; not deleted)
 
-## Project contents
-The Unity project contains the 3D Android game, rigged KayKit character assets, imported animation packs, ten story chapters, staged enemy encounters, touch controls, Persian HUD/story text, mission interactions, stealth and CC0 sound effects. The soundtrack and Persian voice acting are intentionally deferred.
+## Current development
+The Godot project is the active lightweight migration. Its first playable milestone includes a procedural 3D arena, Kaveh, a Zahhak guard with simple chase behavior, melee combat, health bars, Persian HUD, and touch controls. The original Unity assets and project remain in the repository as a backup while migration continues.
 
-## Build an Android APK
-1. Open `UnityProject/` with Unity **2022.3.62f1** and install Android Build Support (SDK/NDK and OpenJDK).
-2. In the Unity menu, run `Kaveh Rising > Build Android APK`.
-3. The APK is written to `UnityProject/Build/KavehRising.apk`.
+## Build an Android debug APK
+1. Open **Actions** in this repository.
+2. Select **Godot Android APK**.
+3. Choose **Run workflow** on the `main` branch.
+4. When the run succeeds, download the `KAVEH-RISING-Android-debug` artifact from that run.
 
-The same build is available through GitHub Actions: open **Actions > Unity Android APK > Run workflow**. The workflow builds the APK and publishes it as the `KAVEH-RISING-Android-APK` artifact for 14 days.
+The workflow downloads the official Godot 4.7.2 editor and matching export templates, installs Android build dependencies, validates the project, exports a debug APK, and uploads it for 14 days. No Godot account or license secret is required.
 
-## GitHub Actions license setup
-Before the cloud build can run, add a valid Unity license XML as the repository Actions secret named `UNITY_LICENSE`. If required by the selected Unity license/activation method, also configure `UNITY_EMAIL` and `UNITY_PASSWORD`. Never commit license files or credentials to the repository.
+## Controls in the first prototype
+- Android touch: directional buttons and «ضربه».
+- Desktop test: WASD / arrow keys to move, Space to attack.
+
+## Story direction
+The game follows Kaveh's uprising against Zahhak. The planned story retains ten chapters and seventeen enemy waves, including the forge, the oppressed people, the mountain pass, Zahhak's prison, the prisoners' rescue, the people's uprising, and the Kaviani banner. Music and Persian voice acting remain deferred for the user to provide.
 
 ## Validation status
-The repository includes a non-destructive preflight validator at `Kaveh Rising > Validate Project Before Device Build`. It checks required source assets, generated character prefabs, imported animation clips, enabled build scenes and Android support.
-
-**Release status:** no successful Unity Android build or physical-device test has yet been verified from this environment. A successful GitHub Actions run and installation/gameplay test on a real Android device are still required before calling this a tested release.
+The Godot source and Android workflow have been added. An APK is **not yet verified**: the GitHub Actions workflow must complete successfully, and the resulting build still needs installation and gameplay testing on a real Android device. A signed release build is a later publishing step.
