@@ -1,5 +1,7 @@
 extends SceneTree
 
+const Chapters = preload("res://scripts/chapter_data.gd")
+
 func _initialize() -> void:
 	call_deferred("_run_test")
 
@@ -43,6 +45,18 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: weapon sound effect did not import")
 		quit(8)
 		return
+	if Chapters.total_waves() != 17 or Chapters.chapter_count() != 10:
+		push_error("SMOKE_FAIL: campaign data is not ten chapters and seventeen waves")
+		quit(19)
+		return
+	for chapter_index in range(Chapters.chapter_count()):
+		game.call("_begin_chapter",chapter_index)
+		await process_frame
+		var chapter_enemies: Array = game.get("enemies")
+		if chapter_enemies.is_empty():
+			push_error("SMOKE_FAIL: chapter %d did not spawn combat encounters" % (chapter_index+1))
+			quit(20)
+			return
 	game.call("_begin_chapter",3)
 	await process_frame
 	var targets: Array = game.get("rescue_targets")
@@ -108,6 +122,6 @@ func _run_test() -> void:
 		return
 	for i in range(20):
 		await process_frame
-	print("SMOKE_OK: campaign, rigged characters, animation sets, SFX, proximity rescue and Zahhak boss verified")
+	print("SMOKE_OK: all 10 chapters / 17 waves, rigged characters, animation sets, SFX, prisoner rescue, Zahhak boss, upgrades and pause menu verified")
 	game.queue_free()
 	quit(0)
