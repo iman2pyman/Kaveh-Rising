@@ -77,6 +77,16 @@ func _run_test() -> void:
 		quit(13)
 		return
 	hero_anim.play("Movement/Running_A")
+	game.call("_toggle_pause")
+	if not get_tree().paused:
+		push_error("SMOKE_FAIL: pause menu did not pause the game")
+		quit(14)
+		return
+	game.call("_toggle_pause")
+	if get_tree().paused:
+		push_error("SMOKE_FAIL: pause menu did not resume the game")
+		quit(15)
+		return
 	for i in range(20):
 		await process_frame
 	print("SMOKE_OK: campaign, rigged characters, animation sets, SFX, proximity rescue and Zahhak boss verified")
