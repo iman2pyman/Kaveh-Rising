@@ -72,7 +72,7 @@ namespace KavehRising
         {
             foreach(var t in GetComponentsInChildren<Transform>(true))
                 foreach(var token in tokens)
-                    if(t.name.Replace(" ","").Replace(".","").Replace(":","").ToLowerInvariant()==token.Replace("_","").ToLowerInvariant())return t;
+                    if(t.name.Replace(" ","").Replace(".","").Replace(":","").Replace("_","").ToLowerInvariant()==token.Replace("_","").ToLowerInvariant())return t;
             return null;
         }
         string Path(Transform target)
