@@ -370,6 +370,76 @@ func _build_arena_landmarks(kind: String) -> void:
 			for x in [-5.0,5.0]:
 				_box(landmarks, Vector3(x,2.2,-12), Vector3(1.2,4.4,1.2), Color(0.34,0.25,0.24))
 
+	_build_persian_architecture(landmarks, kind)
+
+func _build_persian_architecture(parent: Node3D, kind: String) -> void:
+	# Monumental stonework, column capitals and royal reliefs inspired by ancient Iran.
+	if kind in ["fortress","throne"]:
+		for x in [-8.0,-5.2,5.2,8.0]:
+			var shaft := MeshInstance3D.new()
+			var shaft_mesh := CylinderMesh.new()
+			shaft_mesh.top_radius = 0.34
+			shaft_mesh.bottom_radius = 0.48
+			shaft_mesh.height = 5.2
+			shaft.mesh = shaft_mesh
+			shaft.position = Vector3(x,2.6,-10.35)
+			shaft.material_override = _mat(Color(0.48,0.40,0.30))
+			parent.add_child(shaft)
+			for y in [0.28,4.95]:
+				var ring := MeshInstance3D.new()
+				var ring_mesh := CylinderMesh.new()
+				ring_mesh.top_radius = 0.58
+				ring_mesh.bottom_radius = 0.58
+				ring_mesh.height = 0.22
+				ring.mesh = ring_mesh
+				ring.position = Vector3(x,y,-10.35)
+				ring.material_override = _mat(Color(0.62,0.48,0.27))
+				parent.add_child(ring)
+			_box(parent,Vector3(x,5.30,-10.35),Vector3(1.35,0.45,1.1),Color(0.55,0.43,0.28))
+		_box(parent,Vector3(0,5.55,-10.35),Vector3(18.0,0.38,1.2),Color(0.58,0.45,0.29))
+	if kind == "throne":
+		var medallion := MeshInstance3D.new()
+		var disc := CylinderMesh.new()
+		disc.top_radius = 1.15
+		disc.bottom_radius = 1.15
+		disc.height = 0.16
+		medallion.mesh = disc
+		medallion.position = Vector3(0,5.1,-12.68)
+		medallion.rotation.x = PI*0.5
+		medallion.material_override = _mat(Color(0.66,0.43,0.12),Color(0.20,0.08,0.01))
+		parent.add_child(medallion)
+		var sun_core := _add_sphere_part(parent,"RoyalSunCore",Vector3(0,5.1,-12.80),Vector3(0.48,0.48,0.12),_mat(Color(0.88,0.66,0.25)))
+		for side in [-1,1]:
+			var wing := _box(parent,Vector3(float(side)*1.35,5.1,-12.76),Vector3(1.15,0.24,0.12),Color(0.78,0.58,0.25))
+			wing.rotation.z = float(side)*-0.12
+			for feather in range(3):
+				var ray := _box(parent,Vector3(float(side)*(0.95+float(feather)*0.35),5.42+float(feather)*0.08,-12.74),Vector3(0.65,0.07,0.08),Color(0.68,0.48,0.19))
+				ray.rotation.z = float(side)*-0.20
+	if kind == "village":
+		for x in [-9.0,9.0]:
+			for side in [-1,1]:
+				_box(parent,Vector3(x+float(side)*1.75,1.6,-6.0),Vector3(0.48,3.2,0.65),Color(0.52,0.34,0.20))
+			_box(parent,Vector3(x,3.18,-6.0),Vector3(4.1,0.55,0.72),Color(0.61,0.43,0.26))
+			_box(parent,Vector3(x,3.52,-6.0),Vector3(3.2,0.12,0.76),Color(0.72,0.55,0.32))
+	if kind == "forge":
+		for x in [-7.0,7.0]:
+			for z in [-9.0,-7.0]:
+				_box(parent,Vector3(x,2.15,z),Vector3(0.16,0.12,1.9),Color(0.65,0.35,0.12))
+			var anvil_base := _box(parent,Vector3(x,0.95,-5.4),Vector3(1.05,0.45,0.72),Color(0.22,0.22,0.24))
+			var anvil_top := _box(parent,Vector3(x,1.24,-5.4),Vector3(1.45,0.16,0.72),Color(0.48,0.50,0.52))
+	if kind == "mountain":
+		for side in [-1,1]:
+			var peak := MeshInstance3D.new()
+			var peak_mesh := CylinderMesh.new()
+			peak_mesh.top_radius = 0.02
+			peak_mesh.bottom_radius = 2.4
+			peak_mesh.height = 8.5
+			peak.mesh = peak_mesh
+			peak.position = Vector3(float(side)*11.5,4.25,-12)
+			peak.material_override = _mat(Color(0.30,0.31,0.34))
+			parent.add_child(peak)
+
+
 func _make_player() -> void:
 	player = CharacterBody3D.new()
 	player.name = "Kaveh"
@@ -751,6 +821,24 @@ func _control_button(caption: String, pos: Vector2, size: Vector2) -> Button:
 	b.position = pos
 	b.size = size
 	b.add_theme_font_size_override("font_size",21)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.12,0.075,0.055,0.94)
+	normal.border_color = Color(0.72,0.52,0.25,0.98)
+	normal.set_border_width_all(2)
+	normal.set_corner_radius_all(18)
+	normal.content_margin_left = 10
+	normal.content_margin_right = 10
+	normal.content_margin_top = 7
+	normal.content_margin_bottom = 7
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.28,0.12,0.065,0.98)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.48,0.20,0.07,1.0)
+	b.add_theme_stylebox_override("normal",normal)
+	b.add_theme_stylebox_override("hover",hover)
+	b.add_theme_stylebox_override("pressed",pressed)
+	b.add_theme_color_override("font_color",Color(0.96,0.87,0.68))
+	b.add_theme_color_override("font_hover_color",Color(1.0,0.96,0.82))
 	hud.add_child(b)
 	return b
 
@@ -1349,12 +1437,18 @@ func _animate_hero(delta: float) -> void:
 	if not hero_parts.is_empty():
 		var phase := float(hero_visual.get_meta("phase",0.0))+delta*(9 if moving else 2)
 		hero_visual.set_meta("phase",phase)
+		var attacking := attack_cd > 0.18
 		for key in hero_parts:
 			var part: Node3D = hero_parts[key]
-			part.rotation.x = sin(phase+(PI if str(key).begins_with("leg") else 0))* (0.42 if moving else 0.04)
+			if str(key).begins_with("leg"):
+				part.rotation.x = sin(phase+PI)* (0.42 if moving else 0.025)
+			elif key == "arm1":
+				part.rotation.x = lerpf(part.rotation.x,-1.05 if attacking else sin(phase)*0.12,delta*14)
+			else:
+				part.rotation.x = lerpf(part.rotation.x,0.0 if not moving else sin(phase)*0.12,delta*10)
 	if is_instance_valid(hammer):
 		if attack_cd > 0.2:
-			hammer.rotation.x = lerpf(hammer.rotation.x,-0.75,delta*18)
+			hammer.rotation.x = lerpf(hammer.rotation.x,-0.95,delta*18)
 		else:
 			hammer.rotation.x = lerpf(hammer.rotation.x,0,delta*12)
 
