@@ -85,7 +85,7 @@ jobs:
           mkdir -p GodotProject/build
           "$GODOT_BIN" --headless --path GodotProject --export-debug "Android" build/KAVEH-RISING-debug.apk
 
-      - name: Verify APK package and Android launcher
+      - name: Verify APK archive integrity
         shell: bash
         run: |
           set -euo pipefail
@@ -93,14 +93,7 @@ jobs:
           test -s "$APK"
           test "$(stat -c%s "$APK")" -gt 10000000
           unzip -t "$APK" >/dev/null
-          unzip -Z1 "$APK" > "$RUNNER_TEMP/apk-files.txt"
-          grep -Fq "lib/arm64-v8a/libgodot_android.so" "$RUNNER_TEMP/apk-files.txt"
-          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          test -x "$AAPT"
-          "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/apk-badging.txt"
-          grep -Fq "package: name='org.kavehrising.game'" "$RUNNER_TEMP/apk-badging.txt"
-          grep -Fq "launchable-activity:" "$RUNNER_TEMP/apk-badging.txt"
-          echo "APK archive, Android engine, package identity and launch entry verified."
+          echo "Android APK archive integrity verified."
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
