@@ -125,6 +125,26 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: closing upgrade workshop did not resume gameplay")
 		quit(18)
 		return
+	# Verify that campaign, purchased upgrades and audio preferences survive a save/load cycle.
+	game.set("sfx_volume",0.35)
+	game.call("_save",5)
+	var saved := ConfigFile.new()
+	if saved.load("user://progress.cfg") != OK:
+		push_error("SMOKE_FAIL: progress file could not be read after save")
+		quit(23)
+		return
+	if int(saved.get_value("campaign","chapter",-1)) != 5 or int(saved.get_value("campaign","coins",-1)) != int(game.get("coins")):
+		push_error("SMOKE_FAIL: campaign chapter or coin balance was not persisted")
+		quit(24)
+		return
+	if float(saved.get_value("upgrades","attack_damage",0.0)) != float(game.get("attack_damage")) or float(saved.get_value("upgrades","max_health",0.0)) != float(game.get("max_health")):
+		push_error("SMOKE_FAIL: character upgrades were not persisted")
+		quit(25)
+		return
+	if not is_equal_approx(float(saved.get_value("settings","sfx_volume",0.0)),0.35):
+		push_error("SMOKE_FAIL: sound preference was not persisted")
+		quit(26)
+		return
 	hero_anim.play("Movement/Running_A")
 	game.call("_toggle_pause")
 	if not paused:
