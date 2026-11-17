@@ -48,6 +48,8 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: rigged enemy was not created")
 		quit(7)
 		return
+	game.set("attack_cd",0.0)
+	game.call("_attack")
 	if float(first_enemy.get_meta("hp")) >= enemy_hp_before:
 		push_error("SMOKE_FAIL: player attack did not damage a target in front of Kaveh")
 		quit(30)
