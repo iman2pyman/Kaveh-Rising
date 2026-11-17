@@ -10,13 +10,13 @@ const CHAPTERS := [
 	{"title":"آزادسازی زندانیان","subtitle":"هم‌پیمانان تازه","mission":"از زندانیان محافظت کن و فرمانده سیاه‌چال را شکست بده","waves":2,"enemy":"elite","count":3,"arena":"dungeon","reward":65,"story":"زنجیرها گسسته‌اند؛ آزادشدگان سوگند یاری می‌خورند."},
 	{"title":"دشت خیزش","subtitle":"پرچم در باد","mission":"موج‌های پیاپی سپاه ضحاک را عقب بران","waves":2,"enemy":"guard","count":4,"arena":"plain","reward":75,"story":"درفش دادخواهی از دور دیده می‌شود و سپاه مردم گرد آن جمع می‌شود."},
 	{"title":"جنگل نفرین‌شده","subtitle":"نگهبانان باستانی","mission":"از تله‌ها بگذر و جانوران افسانه‌ای را شکست بده","waves":2,"enemy":"beast","count":4,"arena":"forest","reward":85,"story":"نیروهای تاریکی جنگل کهن را به کمینگاه بدل کرده‌اند."},
-	{"title":"دژ ماران","subtitle":"دروازه‌های آهنین","mission":"دژ را پاکسازی کن و فرماندهان ضحاک را از میان بردار","waves":2,"enemy":"elite","count":4,"arena":"fortress","reward":95,"story":"راه کاخ از دژی می‌گذرد که دیوارهایش با ترس و آهن ساخته شده‌اند."},
+	{"title":"دژ ماران","subtitle":"دروازه‌های آهنین","mission":"دژ را پاکسازی کن و فرماندهان ضحاک را از میان بردار","waves":1,"enemy":"elite","count":4,"arena":"fortress","reward":95,"story":"راه کاخ از دژی می‌گذرد که دیوارهایش با ترس و آهن ساخته شده‌اند."},
 	{"title":"ساخت درفش کاویانی","subtitle":"امید یک سرزمین","mission":"از آهنگران و پرچم تازه در برابر مهاجمان دفاع کن","waves":1,"enemy":"elite","count":5,"arena":"forge","reward":110,"story":"پیش‌بند چرمی کاوه نشان آزادی می‌شود؛ درفش کاویانی برافراشته خواهد شد."},
-	{"title":"نبرد واپسین","subtitle":"رویارویی با ضحاک","mission":"از سد سپاه تاریکی بگذر و ضحاک را شکست بده","waves":1,"enemy":"boss","count":1,"arena":"throne","reward":250,"story":"مردم یک‌دل شده‌اند. زمان پایان دادن به فرمانروایی ضحاک فرا رسیده است."}
+	{"title":"نبرد واپسین","subtitle":"رویارویی با ضحاک","mission":"نخست سپاه تاریکی را شکست بده، سپس ضحاک را از تخت به زیر بکش","waves":2,"enemy":"boss","count":1,"arena":"throne","reward":250,"story":"مردم یک‌دل شده‌اند. زمان پایان دادن به فرمانروایی ضحاک فرا رسیده است."}
 ]
 
 # Wave counts add up to seventeen. A chapter can contain one or two waves.
-const WAVE_PLAN := [1, 2, 2, 2, 2, 2, 2, 2, 1, 1]
+const WAVE_PLAN := [1, 2, 2, 2, 2, 2, 2, 1, 1, 2]
 
 static func get_chapter(index: int) -> Dictionary:
 	return CHAPTERS[clampi(index, 0, CHAPTERS.size() - 1)].duplicate(true)
