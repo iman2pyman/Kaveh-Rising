@@ -42,11 +42,17 @@ func _run_test() -> void:
 		quit(6)
 		return
 	var first_enemy := enemies[0] as CharacterBody3D
+	first_enemy.global_position = hero.global_position + Vector3(0,0,-1.5)
+	var enemy_hp_before := float(first_enemy.get_meta("hp"))
 	if first_enemy == null or not first_enemy.has_meta("anim_player"):
 		push_error("SMOKE_FAIL: rigged enemy was not created")
 		quit(7)
 		return
-	# Enemy attacks now have a readable windup; moving/dodging during it avoids damage.
+	if float(first_enemy.get_meta("hp")) >= enemy_hp_before:
+		push_error("SMOKE_FAIL: player attack did not damage a target in front of Kaveh")
+		quit(30)
+		return
+	# Enemy attacks have a readable windup; a correctly timed dodge must avoid damage.
 	first_enemy.global_position = hero.global_position + Vector3(0,0,1.2)
 	first_enemy.set_meta("cooldown",0.01)
 	first_enemy.set_meta("attack_windup",0.0)
@@ -58,10 +64,19 @@ func _run_test() -> void:
 		quit(28)
 		return
 	first_enemy.set_meta("attack_windup",0.01)
+	game.call("_dodge")
+	game.call("_update_enemies",0.02)
+	if float(game.get("health")) != health_before_telegraph:
+		push_error("SMOKE_FAIL: a timed dodge did not avoid the enemy attack")
+		quit(29)
+		return
+	game.set("invulnerable",0.0)
+	first_enemy.global_position = hero.global_position + Vector3(0,0,1.2)
+	first_enemy.set_meta("attack_windup",0.01)
 	game.call("_update_enemies",0.02)
 	if float(game.get("health")) >= health_before_telegraph:
-		push_error("SMOKE_FAIL: enemy attack did not resolve after its windup")
-		quit(29)
+		push_error("SMOKE_FAIL: enemy attack did not resolve when the player failed to dodge")
+		quit(31)
 		return
 	game.set("invulnerable",0.0)
 	var sounds: Dictionary = game.get("sfx_streams")
@@ -124,9 +139,17 @@ func _run_test() -> void:
 		return
 	game.call("_begin_chapter",9)
 	await process_frame
+	var final_guard_wave: Array = game.get("enemies")
+	if final_guard_wave.size() != 3:
+		push_error("SMOKE_FAIL: final dark-guard wave did not spawn before Zahhak")
+		quit(32)
+		return
+	game.call("_clear_enemies")
+	game.call("_wave_cleared")
+	await create_timer(1.8).timeout
 	var boss_list: Array = game.get("enemies")
-	if boss_list.size() != 1:
-		push_error("SMOKE_FAIL: final boss did not spawn")
+	if int(game.get("wave")) != 2 or boss_list.size() != 1 or str(boss_list[0].get_meta("kind")) != "boss":
+		push_error("SMOKE_FAIL: Zahhak boss did not spawn as the second final wave")
 		quit(12)
 		return
 	var boss := boss_list[0] as CharacterBody3D
@@ -187,6 +210,6 @@ func _run_test() -> void:
 		return
 	for i in range(20):
 		await process_frame
-	print("SMOKE_OK: all 10 chapters / 17 waves, guarded wave transitions, rigged characters, animation sets, SFX, prisoner rescue, Zahhak boss, upgrades and pause menu verified")
+	print("SMOKE_OK: 10 chapters / 17 waves, player damage, enemy telegraph, dodge avoidance, enemy hit, all arena landmarks, prisoner rescue, final dark-guard wave, Zahhak boss, upgrades, save/load, SFX and pause menu verified")
 	game.queue_free()
 	quit(0)
