@@ -6,6 +6,13 @@ func _initialize() -> void:
 	call_deferred("_run_test")
 
 func _run_test() -> void:
+	var cc0_models := ["tower-square.glb","tower-square-roof.glb","wall.glb","wall-pillar.glb","wall-doorway.glb","gate.glb","door.glb","stairs-stone.glb","flag-banner-long.glb","rocks-large.glb","tree-large.glb"]
+	for asset_name in cc0_models:
+		var asset_path := "res://assets/environment/kenney_castle/" + asset_name
+		if not ResourceLoader.exists(asset_path) or not (load(asset_path) is PackedScene):
+			push_error("SMOKE_FAIL: imported CC0 environment asset unavailable: " + asset_name)
+			quit(28)
+			return
 	var packed := load("res://Main.tscn") as PackedScene
 	if packed == null:
 		push_error("SMOKE_FAIL: Main.tscn did not load")
