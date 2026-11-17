@@ -94,25 +94,13 @@ jobs:
           test -s "$APK"
           test "$(stat -c%s "$APK")" -gt 10000000
           unzip -t "$APK" >/dev/null
-          CONTENTS="$(unzip -Z1 "$APK")"
-          grep -q '^assets/main.pck
-        with:
-          name: KAVEH-RISING-Android-debug
-          path: GodotProject/build/KAVEH-RISING-debug.apk
-          if-no-files-found: error
-          retention-days: 14
- <<< "$CONTENTS"
-          grep -q '^lib/arm64-v8a/libgodot_android.so
-        with:
-          name: KAVEH-RISING-Android-debug
-          path: GodotProject/build/KAVEH-RISING-debug.apk
-          if-no-files-found: error
-          retention-days: 14
- <<< "$CONTENTS"
-          BADGING="$("$AAPT" dump badging "$APK")"
-          grep -q "package: name='org.kavehrising.game'" <<< "$BADGING"
-          grep -q '^launchable-activity:' <<< "$BADGING"
-          echo "APK verified: $(stat -c%s "$APK") bytes; package org.kavehrising.game; arm64-v8a; game payload and launcher entry present."
+          unzip -Z1 "$APK" > "$RUNNER_TEMP/apk-files.txt"
+          grep -Fqx "assets/main.pck" "$RUNNER_TEMP/apk-files.txt"
+          grep -Fqx "lib/arm64-v8a/libgodot_android.so" "$RUNNER_TEMP/apk-files.txt"
+          "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/apk-badging.txt"
+          grep -Fq "package: name='org.kavehrising.game'" "$RUNNER_TEMP/apk-badging.txt"
+          grep -q "^launchable-activity:" "$RUNNER_TEMP/apk-badging.txt"
+          echo "APK verified: $(stat -c%s "$APK") bytes; package, arm64-v8a library, game payload and launcher entry present."
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
