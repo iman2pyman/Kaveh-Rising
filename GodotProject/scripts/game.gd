@@ -383,6 +383,55 @@ func _build_arena_landmarks(kind: String) -> void:
 				_box(landmarks, Vector3(x,2.2,-12), Vector3(1.2,4.4,1.2), Color(0.34,0.25,0.24))
 
 	_build_persian_architecture(landmarks, kind)
+	_build_modular_heritage_set(landmarks, kind)
+
+
+func _add_cc0_model(parent: Node3D, file_name: String, at_position: Vector3, model_scale: float, yaw: float = 0.0) -> Node3D:
+	var resource_path := "res://assets/environment/kenney_castle/" + file_name + ".glb"
+	if not ResourceLoader.exists(resource_path):
+		push_warning("Missing environment asset: " + resource_path)
+		return null
+	var packed := load(resource_path) as PackedScene
+	if packed == null:
+		push_warning("Could not load environment asset: " + resource_path)
+		return null
+	var instance := packed.instantiate() as Node3D
+	if instance == null:
+		push_warning("Environment asset root is not Node3D: " + resource_path)
+		return null
+	instance.position = at_position
+	instance.scale = Vector3.ONE * model_scale
+	instance.rotation.y = yaw
+	instance.set_meta("source_license","Kenney CC0 1.0")
+	parent.add_child(instance)
+	return instance
+
+func _build_modular_heritage_set(parent: Node3D, kind: String) -> void:
+	# Real imported GLB props replace some of the former box-only landmarks.
+	if kind in ["fortress","throne"]:
+		_add_cc0_model(parent,"tower-square",-13.0*Vector3.RIGHT+Vector3(0,0,-9.5),3.1,0.0)
+		_add_cc0_model(parent,"tower-square",13.0*Vector3.RIGHT+Vector3(0,0,-9.5),3.1,0.0)
+		_add_cc0_model(parent,"tower-square-roof",Vector3(-13.0,0,-9.5),3.1)
+		_add_cc0_model(parent,"tower-square-roof",Vector3(13.0,0,-9.5),3.1)
+		_add_cc0_model(parent,"wall-doorway",Vector3(0,0,-12.8),2.9)
+		_add_cc0_model(parent,"gate",Vector3(0,0,-12.1),2.4)
+		for x in [-8.0,-4.0,4.0,8.0]:
+			_add_cc0_model(parent,"wall",Vector3(x,0,-12.8),2.1)
+			_add_cc0_model(parent,"wall-pillar",Vector3(x,0,-12.8),2.1)
+		_add_cc0_model(parent,"stairs-stone",Vector3(0,0,-7.0),2.0)
+		_add_cc0_model(parent,"flag-banner-long",Vector3(-10.0,5.5,-11.0),2.2)
+		_add_cc0_model(parent,"flag-banner-long",Vector3(10.0,5.5,-11.0),2.2,PI)
+	elif kind == "dungeon":
+		_add_cc0_model(parent,"wall-doorway",Vector3(0,0,-12.5),2.6)
+		_add_cc0_model(parent,"gate",Vector3(0,0,-11.8),2.2)
+		_add_cc0_model(parent,"door",Vector3(0,0,-11.6),2.1)
+	elif kind in ["mountain","plain","forest"]:
+		for i in range(5):
+			var side := -1.0 if i % 2 == 0 else 1.0
+			var z := -11.0 + float(i)*4.2
+			_add_cc0_model(parent,"rocks-large",Vector3(side*(10.5+float(i%3)),0,z),1.1+float(i%2)*0.25,float(i)*0.4)
+			if kind == "forest" or i % 2 == 0:
+				_add_cc0_model(parent,"tree-large",Vector3(side*(7.5+float(i%2)*2.0),0,z+1.5),1.5,float(i)*0.7)
 
 func _build_persian_architecture(parent: Node3D, kind: String) -> void:
 	# Monumental stonework, column capitals and royal reliefs inspired by ancient Iran.
