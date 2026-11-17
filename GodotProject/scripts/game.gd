@@ -283,7 +283,9 @@ func _build_arena_landmarks(kind: String) -> void:
 	# without importing heavy environment packs or adding physics overhead.
 	var landmarks := Node3D.new()
 	landmarks.name = "ArenaLandmarks_" + kind
+	landmarks.set_meta("arena_landmarks_kind", kind)
 	arena.add_child(landmarks)
+	landmarks.name = "ArenaLandmarks_" + kind
 	match kind:
 		"forge":
 			for x in [-7.0, 7.0]:
