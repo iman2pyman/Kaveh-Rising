@@ -1069,6 +1069,82 @@ func _make_beast(body: CharacterBody3D, size: float) -> void:
 			limb.material_override = _mat(Color(0.14,0.19,0.10))
 			leg.add_child(limb)
 
+
+func _make_zahhak_visual(body: CharacterBody3D, size: float) -> void:
+	# Zahhak is a human tyrant king; the serpents frame his shoulders.
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	visual.scale = Vector3.ONE * size
+	body.add_child(visual)
+	var skin := _mat(Color(0.48,0.29,0.22))
+	var robe := _mat(Color(0.16,0.025,0.055))
+	var robe_dark := _mat(Color(0.065,0.035,0.045))
+	var gold := _mat(Color(0.72,0.48,0.16),Color(0.16,0.075,0.01))
+	var steel := _mat(Color(0.28,0.29,0.32))
+	var beard := _mat(Color(0.055,0.035,0.03))
+	var eye := _mat(Color(0.95,0.12,0.025),Color(0.8,0.025,0.0))
+	_add_capsule_part(visual,"RoyalRobe",Vector3(0,1.16,0),0.57,1.35,robe)
+	_add_sphere_part(visual,"RoyalShoulders",Vector3(0,1.68,0),Vector3(0.78,0.30,0.47),robe_dark)
+	_add_sphere_part(visual,"RoyalFace",Vector3(0,2.10,-0.02),Vector3(0.48,0.59,0.42),skin)
+	_add_sphere_part(visual,"RoyalHair",Vector3(0,2.35,0.07),Vector3(0.51,0.30,0.46),beard)
+	_add_sphere_part(visual,"RoyalBeard",Vector3(0,1.82,-0.19),Vector3(0.35,0.34,0.23),beard)
+	_add_capsule_part(visual,"RoyalBeardTip",Vector3(0,1.59,-0.19),0.14,0.35,beard)
+	for side in [-1,1]:
+		_add_sphere_part(visual,"RoyalEye"+str(side),Vector3(float(side)*0.12,2.13,-0.215),Vector3(0.055,0.045,0.035),eye)
+		_add_sphere_part(visual,"RoyalBrow"+str(side),Vector3(float(side)*0.12,2.22,-0.21),Vector3(0.13,0.045,0.045),beard)
+		var pauldron := _add_sphere_part(visual,"GoldPauldron"+str(side),Vector3(float(side)*0.55,1.63,-0.02),Vector3(0.36,0.29,0.38),gold)
+		pauldron.rotation.z = float(side)*0.12
+		var arm := Node3D.new()
+		arm.name = "arm"+str(side)
+		arm.position = Vector3(float(side)*0.55,1.48,0)
+		visual.add_child(arm)
+		_add_capsule_part(arm,"RoyalSleeve",Vector3(0,-0.30,0),0.18,0.72,robe)
+		_add_capsule_part(arm,"RoyalBracer",Vector3(0,-0.58,-0.01),0.17,0.30,gold)
+		var leg := Node3D.new()
+		leg.name = "leg"+str(side)
+		leg.position = Vector3(float(side)*0.26,0.67,0)
+		visual.add_child(leg)
+		_add_capsule_part(leg,"RoyalBoot",Vector3(0,-0.30,0),0.20,0.78,robe_dark)
+	var crown_band := _add_capsule_part(visual,"CrownBand",Vector3(0,2.55,0.02),0.39,0.20,gold)
+	crown_band.scale = Vector3(1.28,0.65,1.12)
+	_add_sphere_part(visual,"CrownPeak",Vector3(0,2.78,0.02),Vector3(0.22,0.34,0.20),gold)
+	for side in [-1,1]:
+		var point := MeshInstance3D.new()
+		var pm := CylinderMesh.new()
+		pm.top_radius = 0.015
+		pm.bottom_radius = 0.10
+		pm.height = 0.48
+		point.mesh = pm
+		point.position = Vector3(float(side)*0.30,2.78,0.02)
+		point.rotation.z = float(side)*-0.28
+		point.material_override = gold
+		visual.add_child(point)
+	for side in [-1,1]:
+		var serpent := Node3D.new()
+		serpent.name = "SerpentHead_"+str(side)
+		serpent.position = Vector3(float(side)*0.47,1.67,0.08)
+		serpent.set_meta("side",side)
+		serpent.set_meta("phase",float(side)*0.7)
+		visual.add_child(serpent)
+		var green := _mat(Color(0.12,0.30,0.16))
+		var belly := _mat(Color(0.58,0.48,0.27))
+		for segment in range(4):
+			var neck := _add_capsule_part(serpent,"SerpentNeck"+str(segment),Vector3(float(side)*float(segment)*0.11,0.24+float(segment)*0.20,0),0.16-float(segment)*0.018,0.43,green)
+			neck.rotation.z = float(side)*-0.22
+		var skull := _add_sphere_part(serpent,"SnakeSkull",Vector3(float(side)*0.34,1.00,-0.03),Vector3(0.27,0.23,0.34),green)
+		skull.rotation.z = float(side)*-0.12
+		_add_sphere_part(serpent,"SnakeJaw",Vector3(float(side)*0.34,0.89,-0.15),Vector3(0.24,0.10,0.26),belly)
+		for eye_side in [-1,1]:
+			_add_sphere_part(serpent,"SnakeEye"+str(eye_side),Vector3(float(side)*0.34+float(eye_side)*0.15,1.04,-0.29),Vector3(0.055,0.05,0.035),eye)
+		var tongue := _add_capsule_part(serpent,"ForkedTongue",Vector3(float(side)*0.34,0.83,-0.37),0.025,0.22,_mat(Color(0.75,0.055,0.035)))
+		tongue.rotation.x = 1.2
+	for row in range(3):
+		for col in range(5):
+			var scale_plate := _add_sphere_part(visual,"Scale_%d_%d" % [row,col],Vector3(-0.32+float(col)*0.16,1.48-float(row)*0.16,-0.43),Vector3(0.095,0.10,0.045),steel)
+			scale_plate.rotation.z = 0.12
+	_box(visual,Vector3(0,0.87,-0.36),Vector3(0.90,0.12,0.10),gold)
+	_box(visual,Vector3(0.36,1.15,-0.37),Vector3(0.14,0.75,0.08),gold).rotation.z = -0.18
+
 func _decorate_zahhak(body: CharacterBody3D) -> void:
 	var visual := body.get_node_or_null("Visual")
 	if visual == null:
@@ -1198,10 +1274,10 @@ func _spawn_enemy(kind: String, pos: Vector3) -> void:
 			scale = 1.72
 	if kind == "beast":
 		_make_beast(enemy,scale)
+	elif kind == "boss":
+		_make_zahhak_visual(enemy,scale)
 	else:
 		_make_humanoid(enemy,false,tunic,armor,scale)
-		if kind == "boss":
-			_decorate_zahhak(enemy)
 		_play_anim(enemy,"General/Idle_A")
 	var col := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()
@@ -1299,6 +1375,14 @@ func _update_enemies(delta: float) -> void:
 					part.rotation.x = sin(phase)*0.18
 				elif part is Node3D and str(part.name).begins_with("leg"):
 					part.rotation.x = sin(phase+PI)*0.14
+				elif part is Node3D and str(part.name).begins_with("SerpentHead_"):
+					var side := float(part.get_meta("side",1))
+					var snake_phase := float(part.get_meta("phase",0.0))+delta*2.4
+					part.set_meta("phase",snake_phase)
+					part.rotation.z = side*(-0.10+sin(snake_phase)*0.13)
+					var skull := part.get_node_or_null("SnakeSkull") as Node3D
+					if skull:
+						skull.position.y = 1.0+sin(snake_phase*1.35)*0.055
 	if enemies.is_empty() and active and not ended and not wave_transition_pending:
 		_wave_cleared()
 
