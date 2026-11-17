@@ -648,7 +648,7 @@ func _start_new() -> void:
 	_begin_chapter(0)
 
 func _resume() -> void:
-	health = MAX_HP
+	health = max_health
 	_begin_chapter(saved_chapter)
 
 func _begin_chapter(index: int) -> void:
@@ -1356,9 +1356,15 @@ func _set_sfx_volume(value: float) -> void:
 func _save(next_chapter: int) -> void:
 	saved_chapter = clampi(next_chapter,0,Chapters.chapter_count()-1)
 	var cfg := ConfigFile.new()
+	# Keep every player-facing progression setting in one durable save file.
 	cfg.set_value("campaign","chapter",saved_chapter)
 	cfg.set_value("campaign","coins",coins)
-	cfg.save("user://progress.cfg")
+	cfg.set_value("upgrades","attack_damage",attack_damage)
+	cfg.set_value("upgrades","max_health",max_health)
+	cfg.set_value("settings","sfx_volume",sfx_volume)
+	var save_error := cfg.save("user://progress.cfg")
+	if save_error != OK:
+		push_warning("Could not save campaign progress: %s" % error_string(save_error))
 
 func _load_save() -> void:
 	var cfg := ConfigFile.new()
