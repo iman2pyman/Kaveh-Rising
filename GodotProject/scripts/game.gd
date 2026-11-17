@@ -276,6 +276,97 @@ func _build_arena(kind: String) -> void:
 			arena.add_child(fire)
 	if kind == "throne":
 		_box(arena, Vector3(0,0.35,-10), Vector3(7,0.7,4), Color(0.20,0.07,0.10))
+	_build_arena_landmarks(kind)
+
+func _build_arena_landmarks(kind: String) -> void:
+	# Distinct low-poly landmarks make every story chapter visually readable
+	# without importing heavy environment packs or adding physics overhead.
+	var landmarks := Node3D.new()
+	landmarks.name = "ArenaLandmarks_" + kind
+	arena.add_child(landmarks)
+	match kind:
+		"forge":
+			for x in [-7.0, 7.0]:
+				_box(landmarks, Vector3(x,0.65,-8), Vector3(2.8,1.3,1.8), Color(0.19,0.13,0.10))
+				_box(landmarks, Vector3(x,1.5,-8), Vector3(1.0,1.0,0.9), Color(0.36,0.12,0.04))
+				var chimney := MeshInstance3D.new()
+				var cm := CylinderMesh.new()
+				cm.height = 3.2
+				cm.top_radius = 0.38
+				cm.bottom_radius = 0.55
+				chimney.mesh = cm
+				chimney.position = Vector3(x+0.9,2.0,-8.2)
+				chimney.material_override = _mat(Color(0.22,0.20,0.19))
+				landmarks.add_child(chimney)
+			_box(landmarks, Vector3(0,0.55,-6), Vector3(2.0,1.1,1.2), Color(0.32,0.32,0.35))
+		"village":
+			for x in [-9.0,9.0]:
+				_box(landmarks, Vector3(x,1.2,-8), Vector3(4.0,2.4,3.2), Color(0.39,0.25,0.14))
+				var roof := _box(landmarks, Vector3(x,2.75,-8), Vector3(4.6,0.45,3.8), Color(0.24,0.12,0.08))
+				roof.rotation.z = 0.10
+			_box(landmarks, Vector3(0,0.45,-9), Vector3(2.0,0.9,2.0), Color(0.34,0.31,0.25))
+			var well := MeshInstance3D.new()
+			var well_mesh := CylinderMesh.new()
+			well_mesh.height = 1.1
+			well_mesh.top_radius = 1.0
+			well_mesh.bottom_radius = 1.0
+			well.mesh = well_mesh
+			well.position = Vector3(0,0.55,-9)
+			well.material_override = _mat(Color(0.42,0.40,0.35))
+			landmarks.add_child(well)
+		"mountain":
+			for x in [-5.0,5.0]:
+				_box(landmarks, Vector3(x,3.0,-10), Vector3(1.8,6.0,2.0), Color(0.34,0.35,0.37))
+			_box(landmarks, Vector3(0,6.0,-10), Vector3(11.5,1.5,2.2), Color(0.39,0.39,0.41))
+			_box(landmarks, Vector3(0,1.0,-13), Vector3(1.0,2.0,1.0), Color(0.48,0.46,0.39))
+		"dungeon":
+			for x in [-8.0,8.0]:
+				_box(landmarks, Vector3(x,1.5,-9), Vector3(4.5,3.0,0.45), Color(0.22,0.23,0.27))
+				for bar_x in [-1.4,-0.45,0.45,1.4]:
+					var bar := MeshInstance3D.new()
+					var bar_mesh := CylinderMesh.new()
+					bar_mesh.height = 2.8
+					bar_mesh.top_radius = 0.055
+					bar_mesh.bottom_radius = 0.055
+					bar.mesh = bar_mesh
+					bar.position = Vector3(x+bar_x,1.5,-8.72)
+					bar.material_override = _mat(Color(0.42,0.44,0.47))
+					landmarks.add_child(bar)
+			_box(landmarks, Vector3(0,0.6,-11), Vector3(2.2,1.2,1.2), Color(0.28,0.25,0.22))
+		"plain":
+			for x in [-10.0,10.0]:
+				var pole := MeshInstance3D.new()
+				var pole_mesh := CylinderMesh.new()
+				pole_mesh.height = 5.2
+				pole_mesh.top_radius = 0.09
+				pole_mesh.bottom_radius = 0.14
+				pole.mesh = pole_mesh
+				pole.position = Vector3(x,2.6,-8)
+				pole.material_override = _mat(Color(0.30,0.19,0.10))
+				landmarks.add_child(pole)
+				_box(landmarks, Vector3(x+1.0,4.1,-8), Vector3(1.8,1.4,0.12), Color(0.52,0.10,0.08))
+		"forest":
+			for i in range(8):
+				var angle := TAU*float(i)/8.0
+				var stone := MeshInstance3D.new()
+				var stone_mesh := CylinderMesh.new()
+				stone_mesh.height = 1.8
+				stone_mesh.top_radius = 0.42
+				stone_mesh.bottom_radius = 0.58
+				stone.mesh = stone_mesh
+				stone.position = Vector3(cos(angle)*5.5,0.9,sin(angle)*5.5-7)
+				stone.material_override = _mat(Color(0.24,0.31,0.24))
+				landmarks.add_child(stone)
+		"fortress":
+			_box(landmarks, Vector3(0,2.4,-12), Vector3(13.0,4.8,1.2), Color(0.25,0.22,0.23))
+			for x in [-6.0,-3.0,0.0,3.0,6.0]:
+				_box(landmarks, Vector3(x,5.0,-12), Vector3(1.5,1.0,1.5), Color(0.35,0.30,0.29))
+			_box(landmarks, Vector3(0,1.5,-11.3), Vector3(3.0,3.0,0.3), Color(0.12,0.10,0.12))
+		"throne":
+			_box(landmarks, Vector3(0,1.5,-12), Vector3(5.0,3.0,1.0), Color(0.25,0.08,0.12))
+			_box(landmarks, Vector3(0,3.2,-12), Vector3(7.0,0.5,1.5), Color(0.55,0.34,0.12))
+			for x in [-5.0,5.0]:
+				_box(landmarks, Vector3(x,2.2,-12), Vector3(1.2,4.4,1.2), Color(0.34,0.25,0.24))
 
 func _make_player() -> void:
 	player = CharacterBody3D.new()
