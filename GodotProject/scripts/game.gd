@@ -1383,6 +1383,14 @@ func _update_enemies(delta: float) -> void:
 					var skull := part.get_node_or_null("SnakeSkull") as Node3D
 					if skull:
 						skull.position.y = 1.0+sin(snake_phase*1.35)*0.055
+				elif part is Node3D and str(part.name).begins_with("SerpentHead_"):
+					var side := float(part.get_meta("side",1))
+					var snake_phase := float(part.get_meta("phase",0.0))+delta*2.4
+					part.set_meta("phase",snake_phase)
+					part.rotation.z = side*(-0.10+sin(snake_phase)*0.13)
+					var skull := part.get_node_or_null("SnakeSkull") as Node3D
+					if skull:
+						skull.position.y = 1.0+sin(snake_phase*1.35)*0.055
 	if enemies.is_empty() and active and not ended and not wave_transition_pending:
 		_wave_cleared()
 
