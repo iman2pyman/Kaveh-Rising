@@ -385,98 +385,158 @@ func _make_player() -> void:
 	add_child(player)
 
 func _make_humanoid(body: CharacterBody3D, hero: bool, tunic: Color, armor: Color, size: float) -> void:
-	if _attach_rigged_model(body, hero, size):
+	if hero:
+		_make_kaveh_visual(body, size)
 		return
-	var visual: Node3D = Node3D.new()
+	if _attach_rigged_model(body, false, size):
+		return
+	_make_generic_guard(body, tunic, armor, size)
+
+func _add_capsule_part(parent: Node3D, part_name: String, pos: Vector3, radius: float, height: float, material: Material) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	part.name = part_name
+	var mesh := CapsuleMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	part.mesh = mesh
+	part.position = pos
+	part.material_override = material
+	parent.add_child(part)
+	return part
+
+func _add_sphere_part(parent: Node3D, part_name: String, pos: Vector3, dimensions: Vector3, material: Material) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	part.name = part_name
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.5
+	mesh.height = 1.0
+	part.mesh = mesh
+	part.position = pos
+	part.scale = dimensions
+	part.material_override = material
+	parent.add_child(part)
+	return part
+
+func _make_kaveh_visual(body: CharacterBody3D, size: float) -> void:
+	# Purpose-built human blacksmith silhouette; the hero no longer uses the generic Barbarian FBX.
+	var visual := Node3D.new()
 	visual.name = "Visual"
 	visual.scale = Vector3.ONE * size
 	body.add_child(visual)
-	var torso := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.43
-	capsule.height = 1.05
-	torso.mesh = capsule
-	torso.position.y = 1.05
-	torso.material_override = _mat(tunic)
-	visual.add_child(torso)
-	var chest := MeshInstance3D.new()
-	var chest_mesh := BoxMesh.new()
-	chest_mesh.size = Vector3(0.68,0.28,0.16)
-	chest.mesh = chest_mesh
-	chest.position = Vector3(0,1.25,-0.34)
-	chest.material_override = _mat(armor)
-	visual.add_child(chest)
-	var head := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.29
-	sphere.height = 0.58
-	head.mesh = sphere
-	head.position.y = 1.82
-	head.material_override = _mat(Color(0.69,0.48,0.34))
-	visual.add_child(head)
-	var helmet := MeshInstance3D.new()
-	var helm_mesh := SphereMesh.new()
-	helm_mesh.radius = 0.33
-	helm_mesh.height = 0.35
-	helmet.mesh = helm_mesh
-	helmet.position.y = 2.02
-	helmet.material_override = _mat(Color(0.48,0.35,0.16) if hero else Color(0.12,0.15,0.20))
-	visual.add_child(helmet)
-	var beard := MeshInstance3D.new()
-	var beard_mesh := BoxMesh.new()
-	beard_mesh.size = Vector3(0.27,0.34,0.16)
-	beard.mesh = beard_mesh
-	beard.position = Vector3(0,1.56,-0.24)
-	beard.material_override = _mat(Color(0.12,0.07,0.04))
-	visual.add_child(beard)
+	var skin := _mat(Color(0.63,0.39,0.25))
+	var hair := _mat(Color(0.075,0.045,0.035))
+	var beard_mat := _mat(Color(0.10,0.055,0.035))
+	var linen := _mat(Color(0.72,0.62,0.43))
+	var tunic_mat := _mat(Color(0.48,0.12,0.075))
+	var leather := _mat(Color(0.20,0.105,0.055))
+	var dark_leather := _mat(Color(0.105,0.075,0.055))
+	var bronze := _mat(Color(0.58,0.36,0.12),Color(0.12,0.055,0.012))
+	var iron := _mat(Color(0.34,0.38,0.40))
+	var eye_mat := _mat(Color(0.035,0.025,0.02))
+	_add_capsule_part(visual,"LinenTunic",Vector3(0,1.12,0),0.43,1.12,tunic_mat)
+	_add_capsule_part(visual,"Neck",Vector3(0,1.72,0),0.16,0.32,skin)
+	_add_sphere_part(visual,"Face",Vector3(0,1.99,-0.015),Vector3(0.48,0.61,0.42),skin)
+	for side in [-1,1]:
+		_add_sphere_part(visual,"Ear"+str(side),Vector3(float(side)*0.245,1.99,-0.005),Vector3(0.12,0.18,0.12),skin)
+		_add_sphere_part(visual,"Eye"+str(side),Vector3(float(side)*0.105,2.035,-0.205),Vector3(0.055,0.045,0.035),eye_mat)
+		var brow := _add_capsule_part(visual,"Brow"+str(side),Vector3(float(side)*0.105,2.105,-0.205),0.035,0.13,hair)
+		brow.rotation.z = float(side)*-0.12
+		var moustache := _add_sphere_part(visual,"Moustache"+str(side),Vector3(float(side)*0.075,1.865,-0.225),Vector3(0.17,0.075,0.09),beard_mat)
+		moustache.rotation.z = float(side)*-0.15
+	_add_sphere_part(visual,"BeardJaw",Vector3(0,1.78,-0.17),Vector3(0.34,0.28,0.22),beard_mat)
+	_add_capsule_part(visual,"LongBeard",Vector3(0,1.61,-0.16),0.15,0.42,beard_mat)
+	_add_sphere_part(visual,"HairCap",Vector3(0,2.22,0.025),Vector3(0.49,0.24,0.46),hair)
+	_add_sphere_part(visual,"HeadWrap",Vector3(0,2.30,0.015),Vector3(0.53,0.19,0.48),linen)
+	var wrap_band := _add_capsule_part(visual,"HeadWrapBand",Vector3(0,2.24,-0.02),0.245,0.12,bronze)
+	wrap_band.scale = Vector3(1.0,0.65,0.86)
+	var apron := MeshInstance3D.new()
+	var apron_mesh := BoxMesh.new()
+	apron_mesh.size = Vector3(0.62,0.82,0.12)
+	apron.mesh = apron_mesh
+	apron.position = Vector3(0,0.99,-0.39)
+	apron.material_override = leather
+	visual.add_child(apron)
+	var belt := MeshInstance3D.new()
+	var belt_mesh := BoxMesh.new()
+	belt_mesh.size = Vector3(0.82,0.12,0.48)
+	belt.mesh = belt_mesh
+	belt.position = Vector3(0,0.82,0)
+	belt.material_override = dark_leather
+	visual.add_child(belt)
+	var buckle := MeshInstance3D.new()
+	var buckle_mesh := BoxMesh.new()
+	buckle_mesh.size = Vector3(0.16,0.15,0.055)
+	buckle.mesh = buckle_mesh
+	buckle.position = Vector3(0,0.82,-0.255)
+	buckle.material_override = bronze
+	visual.add_child(buckle)
+	var strap := MeshInstance3D.new()
+	var strap_mesh := BoxMesh.new()
+	strap_mesh.size = Vector3(0.12,0.88,0.08)
+	strap.mesh = strap_mesh
+	strap.position = Vector3(-0.19,1.30,-0.35)
+	strap.rotation.z = -0.32
+	strap.material_override = dark_leather
+	visual.add_child(strap)
+	for side in [-1,1]:
+		var shoulder := _add_sphere_part(visual,"ShoulderGuard"+str(side),Vector3(float(side)*0.43,1.48,0),Vector3(0.34,0.24,0.34),bronze)
+		shoulder.rotation.z = float(side)*0.12
 	var parts := {}
 	for side in [-1,1]:
 		var arm_pivot := Node3D.new()
-		arm_pivot.position = Vector3(float(side)*0.53,1.42,0)
+		arm_pivot.name = "arm"+str(side)
+		arm_pivot.position = Vector3(float(side)*0.49,1.43,0)
 		visual.add_child(arm_pivot)
-		var arm := MeshInstance3D.new()
-		var arm_mesh := CapsuleMesh.new()
-		arm_mesh.radius = 0.16
-		arm_mesh.height = 0.82
-		arm.mesh = arm_mesh
-		arm.position.y = -0.34
-		arm.material_override = _mat(tunic)
-		arm_pivot.add_child(arm)
+		_add_capsule_part(arm_pivot,"UpperArm",Vector3(0,-0.27,0),0.15,0.67,tunic_mat)
+		var bracer := _add_capsule_part(arm_pivot,"IronBracer",Vector3(0,-0.58,-0.01),0.145,0.30,leather)
+		bracer.rotation.z = float(side)*0.08
+		_add_sphere_part(arm_pivot,"BracerRivet",Vector3(0,-0.57,-0.14),Vector3(0.055,0.055,0.035),bronze)
 		var leg_pivot := Node3D.new()
-		leg_pivot.position = Vector3(float(side)*0.23,0.72,0)
+		leg_pivot.name = "leg"+str(side)
+		leg_pivot.position = Vector3(float(side)*0.23,0.67,0)
 		visual.add_child(leg_pivot)
-		var leg := MeshInstance3D.new()
-		var leg_mesh := CapsuleMesh.new()
-		leg_mesh.radius = 0.19
-		leg_mesh.height = 0.78
-		leg.mesh = leg_mesh
-		leg.position.y = -0.34
-		leg.material_override = _mat(armor)
-		leg_pivot.add_child(leg)
+		_add_capsule_part(leg_pivot,"Trousers",Vector3(0,-0.24,0),0.19,0.70,dark_leather)
+		var boot := _add_capsule_part(leg_pivot,"Boot",Vector3(0,-0.55,-0.055),0.19,0.30,leather)
+		boot.scale = Vector3(1.0,0.8,1.3)
 		parts["arm"+str(side)] = arm_pivot
 		parts["leg"+str(side)] = leg_pivot
-	if hero:
-		hero_visual = visual
-		hero_parts = parts
-		hammer = Node3D.new()
-		hammer.position = Vector3(0.53,1.12,-0.25)
-		visual.add_child(hammer)
-		var handle := MeshInstance3D.new()
-		var handle_mesh := CylinderMesh.new()
-		handle_mesh.height = 0.95
-		handle_mesh.top_radius = 0.055
-		handle_mesh.bottom_radius = 0.07
-		handle.mesh = handle_mesh
-		handle.rotation.z = -0.35
-		handle.material_override = _mat(Color(0.25,0.13,0.06))
-		hammer.add_child(handle)
-		var head_part := MeshInstance3D.new()
-		var head_box := BoxMesh.new()
-		head_box.size = Vector3(0.58,0.28,0.3)
-		head_part.mesh = head_box
-		head_part.position.y = 0.45
-		head_part.material_override = _mat(Color(0.43,0.45,0.48))
-		hammer.add_child(head_part)
+	hero_visual = visual
+	hero_parts = parts
+	hammer = Node3D.new()
+	hammer.name = "SmithHammer"
+	hammer.position = Vector3(0.52,1.12,-0.22)
+	visual.add_child(hammer)
+	var handle := _add_capsule_part(hammer,"AshHandle",Vector3(0,0.03,0),0.055,0.94,_mat(Color(0.20,0.10,0.045)))
+	handle.rotation.z = -0.22
+	var hammer_head := MeshInstance3D.new()
+	var hammer_mesh := BoxMesh.new()
+	hammer_mesh.size = Vector3(0.56,0.27,0.30)
+	hammer_head.mesh = hammer_mesh
+	hammer_head.position = Vector3(0,0.49,0)
+	hammer_head.material_override = iron
+	hammer.add_child(hammer_head)
+	for side in [-1,1]:
+		_add_sphere_part(hammer,"HammerCollar"+str(side),Vector3(float(side)*0.19,0.49,0),Vector3(0.07,0.31,0.32),bronze)
+
+func _make_generic_guard(body: CharacterBody3D, tunic: Color, armor: Color, size: float) -> void:
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	visual.scale = Vector3.ONE * size
+	body.add_child(visual)
+	_add_capsule_part(visual,"GuardTorso",Vector3(0,1.05,0),0.40,1.05,_mat(tunic))
+	_add_sphere_part(visual,"GuardHead",Vector3(0,1.82,0),Vector3(0.48,0.58,0.42),_mat(Color(0.58,0.37,0.25)))
+	_add_sphere_part(visual,"GuardHelmet",Vector3(0,2.05,0),Vector3(0.56,0.32,0.48),_mat(armor))
+	for side in [-1,1]:
+		var arm := Node3D.new()
+		arm.name = "arm"+str(side)
+		arm.position = Vector3(float(side)*0.50,1.38,0)
+		visual.add_child(arm)
+		_add_capsule_part(arm,"Arm",Vector3(0,-0.32,0),0.15,0.72,_mat(tunic))
+		var leg := Node3D.new()
+		leg.name = "leg"+str(side)
+		leg.position = Vector3(float(side)*0.22,0.68,0)
+		visual.add_child(leg)
+		_add_capsule_part(leg,"Leg",Vector3(0,-0.30,0),0.18,0.74,_mat(armor))
 
 func _attach_rigged_model(body: CharacterBody3D, hero: bool, size: float) -> bool:
 	var model_path := "res://assets/characters/Barbarian.fbx" if hero else "res://assets/characters/Mage.fbx"
@@ -652,31 +712,23 @@ func _bar(parent: VBoxContainer, caption: String, maximum: float, value: float) 
 	return bar
 
 func _make_controls() -> void:
-	var pad := GridContainer.new()
-	pad.columns = 3
-	pad.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	pad.position = Vector2(18,-168)
-	hud.add_child(pad)
-	var entries := [
-		["↖",Vector2(-1,-1)],["↑",Vector2(0,-1)],["↗",Vector2(1,-1)],
-		["←",Vector2(-1,0)],["●",Vector2.ZERO],["→",Vector2(1,0)],
-		["↙",Vector2(-1,1)],["↓",Vector2(0,1)],["↘",Vector2(1,1)]
-	]
-	for entry in entries:
-		var b := Button.new()
-		b.text = entry[0]
-		b.custom_minimum_size = Vector2(62,47)
-		b.button_down.connect(_press_dir.bind(entry[1]))
-		b.button_up.connect(_release_dir.bind(entry[1]))
-		pad.add_child(b)
-	var hit := _control_button("ضربه",Vector2(-150,-112),Vector2(130,72))
+	var joystick_script = load("res://scripts/virtual_joystick.gd")
+	var joystick = joystick_script.new()
+	joystick.name = "MovementJoystick"
+	joystick.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	joystick.position = Vector2(24,-188)
+	joystick.custom_minimum_size = Vector2(164,164)
+	joystick.size = Vector2(164,164)
+	joystick.vector_changed.connect(_set_joystick_vector)
+	hud.add_child(joystick)
+	var hit := _control_button("⚒\nضربه",Vector2(-154,-126),Vector2(126,88))
 	hit.pressed.connect(_attack)
-	var dodge := _control_button("جاخالی",Vector2(-150,-194),Vector2(130,66))
+	var dodge := _control_button("↗\nجاخالی",Vector2(-154,-224),Vector2(126,82))
 	dodge.pressed.connect(_dodge)
-	interact_button = _control_button("آزادسازی",Vector2(-150,-270),Vector2(130,60))
+	interact_button = _control_button("آزادسازی",Vector2(-154,-314),Vector2(126,58))
 	interact_button.pressed.connect(_interact)
 	interact_button.hide()
-	upgrade_button = _control_button("ارتقا",Vector2(-150,-340),Vector2(130,58))
+	upgrade_button = _control_button("ارتقا",Vector2(-154,-380),Vector2(126,54))
 	upgrade_button.pressed.connect(_open_upgrade_menu)
 	pause_button = Button.new()
 	pause_button.text = "Ⅱ"
@@ -688,6 +740,9 @@ func _make_controls() -> void:
 	pause_button.pressed.connect(_toggle_pause)
 	hud.add_child(pause_button)
 	pause_button.hide()
+
+func _set_joystick_vector(value: Vector2) -> void:
+	move = value
 
 func _control_button(caption: String, pos: Vector2, size: Vector2) -> Button:
 	var b := Button.new()
