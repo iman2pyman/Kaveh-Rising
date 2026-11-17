@@ -44,8 +44,13 @@ func _run_test() -> void:
 	var first_enemy := enemies[0] as CharacterBody3D
 	first_enemy.global_position = hero.global_position + Vector3(0,0,-1.5)
 	var enemy_hp_before := float(first_enemy.get_meta("hp"))
-	if first_enemy == null or not first_enemy.has_meta("anim_player"):
-		push_error("SMOKE_FAIL: rigged enemy was not created")
+	if first_enemy == null:
+		push_error("SMOKE_FAIL: first enemy was not created")
+		quit(7)
+		return
+	var guard_visual := first_enemy.get_node_or_null("Visual") as Node3D
+	if guard_visual == null or guard_visual.get_node_or_null("GuardFace") == null or guard_visual.get_node_or_null("GuardHelmet") == null or guard_visual.get_node_or_null("GuardSword") == null:
+		push_error("SMOKE_FAIL: Persian guard face, helmet or sword is missing")
 		quit(7)
 		return
 	game.set("attack_cd",0.0)
