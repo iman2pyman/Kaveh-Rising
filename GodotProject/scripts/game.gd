@@ -142,16 +142,28 @@ func _make_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = Sky.new()
-	env.sky.sky_material = ProceduralSkyMaterial.new()
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color(0.075,0.105,0.18)
+	sky_material.sky_horizon_color = Color(0.72,0.39,0.22)
+	sky_material.ground_bottom_color = Color(0.10,0.075,0.06)
+	sky_material.ground_horizon_color = Color(0.36,0.22,0.13)
+	sky_material.sun_angle_max = 18.0
+	env.sky.sky_material = sky_material
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.48, 0.51, 0.60)
-	env.ambient_light_energy = 0.8
+	env.ambient_light_color = Color(0.62,0.48,0.34)
+	env.ambient_light_energy = 0.78
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.54,0.34,0.22)
+	env.fog_density = 0.006
 	we.environment = env
 	add_child(we)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_energy = 1.15
+	sun.rotation_degrees = Vector3(-38,-28,0)
+	sun.light_color = Color(1.0,0.79,0.57)
+	sun.light_energy = 1.35
 	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 55.0
 	add_child(sun)
 	arena = Node3D.new()
 	arena.name = "Arena"
@@ -717,6 +729,7 @@ func _make_hud() -> void:
 	var top := PanelContainer.new()
 	top.position = Vector2(14,12)
 	top.custom_minimum_size = Vector2(330,145)
+	_style_panel(top)
 	hud.add_child(top)
 	var vbox := VBoxContainer.new()
 	top.add_child(vbox)
@@ -752,6 +765,7 @@ func _make_hud() -> void:
 	target_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	target_panel.position = Vector2(-145,65)
 	target_panel.custom_minimum_size = Vector2(290,60)
+	_style_panel(target_panel)
 	hud.add_child(target_panel)
 	var target_box := VBoxContainer.new()
 	target_panel.add_child(target_box)
@@ -766,7 +780,21 @@ func _make_hud() -> void:
 	title_panel.set_anchors_preset(Control.PRESET_CENTER)
 	title_panel.position = Vector2(-230,-170)
 	title_panel.custom_minimum_size = Vector2(460,340)
+	_style_panel(title_panel)
 	hud.add_child(title_panel)
+
+
+func _style_panel(panel: PanelContainer) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.055,0.045,0.04,0.90)
+	style.border_color = Color(0.66,0.46,0.22,0.98)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(14)
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	panel.add_theme_stylebox_override("panel",style)
 
 func _bar(parent: VBoxContainer, caption: String, maximum: float, value: float) -> ProgressBar:
 	var group := VBoxContainer.new()
