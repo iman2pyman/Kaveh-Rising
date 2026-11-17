@@ -160,9 +160,9 @@ func _run_test() -> void:
 		quit(12)
 		return
 	var boss := boss_list[0] as CharacterBody3D
-	var boss_visual := boss.get_node_or_null("Visual")
-	if boss_visual == null or boss_visual.get_node_or_null("SerpentHead_1") == null:
-		push_error("SMOKE_FAIL: Zahhak's serpent heads were not created")
+	var boss_visual := boss.get_node_or_null("Visual") as Node3D
+	if boss_visual == null or boss_visual.get_node_or_null("RoyalFace") == null or boss_visual.get_node_or_null("CrownBand") == null or boss_visual.get_node_or_null("SerpentHead_-1") == null or boss_visual.get_node_or_null("SerpentHead_1") == null:
+		push_error("SMOKE_FAIL: Zahhak human king, crown or twin serpents missing")
 		quit(13)
 		return
 	game.set("coins",100)
