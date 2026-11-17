@@ -990,6 +990,7 @@ func _spawn_enemy(kind: String, pos: Vector3) -> void:
 	enemy.set_meta("power",power)
 	enemy.set_meta("speed",speed)
 	enemy.set_meta("cooldown",randf_range(0.4,1.3))
+	enemy.set_meta("attack_windup",0.0)
 	enemy.set_meta("anim_lock",0.0)
 	enemy.set_meta("phase",randf()*TAU)
 	add_child(enemy)
@@ -1034,18 +1035,31 @@ func _update_enemies(delta: float) -> void:
 			enemy.velocity.z = dir.z*enemy_speed
 			enemy.rotation.y = atan2(-dir.x,-dir.z)
 		else:
-			if enemy_anim_lock <= 0.0:
-				_play_anim(enemy,"General/Idle_A")
 			enemy.velocity.x = 0
 			enemy.velocity.z = 0
-			var cd := float(enemy.get_meta("cooldown"))-delta
-			if cd <= 0:
-				cd = randf_range(1.0,1.6)
-				_play_anim(enemy,"Combat/Melee_1H_Attack_Chop")
-				enemy.set_meta("anim_lock",0.62)
-				if invulnerable <= 0:
-					_take_damage(enemy_power)
-			enemy.set_meta("cooldown",cd)
+			var windup := float(enemy.get_meta("attack_windup",0.0))
+			if windup <= 0.0:
+				if enemy_anim_lock <= 0.0:
+					_play_anim(enemy,"General/Idle_A")
+				var cd := float(enemy.get_meta("cooldown"))-delta
+				if cd <= 0.0:
+					windup = 0.68 if enemy.get_meta("kind") == "boss" else 0.42
+					enemy.set_meta("attack_windup",windup)
+					enemy.set_meta("cooldown",0.0)
+					_play_anim(enemy,"Combat/Melee_1H_Attack_Chop")
+					enemy.set_meta("anim_lock",windup+0.18)
+					if enemy.get_meta("kind") == "boss":
+						_show_message("ضحاک برای ضربه سنگین آماده می‌شود؛ جاخالی بده!")
+				else:
+					enemy.set_meta("cooldown",cd)
+			else:
+				windup = maxf(0.0,windup-delta)
+				enemy.set_meta("attack_windup",windup)
+				if windup <= 0.0:
+					# Resolve only if Kaveh is still in range: a well-timed dodge avoids the hit.
+					if enemy.global_position.distance_to(player.global_position) <= reach+0.25 and invulnerable <= 0.0:
+						_take_damage(enemy_power)
+					enemy.set_meta("cooldown",randf_range(0.85,1.35))
 		enemy.velocity.y -= 22*delta
 		enemy.move_and_slide()
 		enemy.position.x = clampf(enemy.position.x,-15.2,15.2)
