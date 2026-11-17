@@ -17,23 +17,23 @@ func _run_test() -> void:
 	game.call("_start_new")
 	await process_frame
 	var hero := game.get("player") as CharacterBody3D
-	if hero == null or not hero.has_meta("anim_player"):
-		push_error("SMOKE_FAIL: rigged hero was not created")
+	if hero == null or hero.get_node_or_null("Visual") == null:
+		push_error("SMOKE_FAIL: custom Kaveh character was not created")
 		quit(3)
 		return
-	var hero_anim := hero.get_meta("anim_player") as AnimationPlayer
-	if hero_anim == null or not hero_anim.has_animation("General/Idle_A"):
-		push_error("SMOKE_FAIL: imported idle animation is unavailable")
+	var hero_visual := hero.get_node("Visual") as Node3D
+	if hero_visual.get_node_or_null("Face") == null or hero_visual.get_node_or_null("LongBeard") == null or hero_visual.get_node_or_null("HeadWrap") == null or hero_visual.get_node_or_null("SmithHammer") == null:
+		push_error("SMOKE_FAIL: Kaveh's face, beard, headwrap or smith hammer is missing")
 		quit(4)
 		return
-	if not hero_anim.has_animation("Combat/Melee_1H_Attack_Chop"):
-		push_error("SMOKE_FAIL: combat animation was not merged")
+	if game.get("hero_parts").is_empty():
+		push_error("SMOKE_FAIL: custom Kaveh locomotion pivots are missing")
 		quit(5)
 		return
 	game.call("_attack")
 	await process_frame
-	if hero_anim.current_animation != "Combat/Melee_1H_Attack_Chop":
-		push_error("SMOKE_FAIL: player attack animation did not play")
+	if float(game.get("attack_cd")) <= 0.0 or float(game.get("hero_anim_lock")) <= 0.0:
+		push_error("SMOKE_FAIL: custom Kaveh attack state did not trigger")
 		quit(21)
 		return
 	var enemies: Array = game.get("enemies")
@@ -199,7 +199,7 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: sound preference was not persisted")
 		quit(26)
 		return
-	hero_anim.play("Movement/Running_A")
+	game.call("_animate_hero",0.16)
 	game.call("_toggle_pause")
 	if not paused:
 		push_error("SMOKE_FAIL: pause menu did not pause the game")
