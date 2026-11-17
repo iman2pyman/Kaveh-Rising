@@ -76,9 +76,8 @@ func _run_test() -> void:
 		var chapter_data := Chapters.get_chapter(chapter_index)
 		var arena_node: Node3D = game.get("arena") as Node3D
 		var has_landmarks := false
-		print("ARENA_CHECK chapter=", chapter_index+1, " expected=", chapter_data.arena, " children=", arena_node.get_children().map(func(n): return str(n.name)))
 		for arena_child in arena_node.get_children():
-			if str(arena_child.name).begins_with("ArenaLandmarks_" + str(chapter_data.arena)) and arena_child.get_child_count() > 0:
+			if arena_child.has_meta("arena_landmarks_kind") and str(arena_child.get_meta("arena_landmarks_kind")) == str(chapter_data.arena) and arena_child.get_child_count() > 0:
 				has_landmarks = true
 				break
 		if not has_landmarks:
