@@ -74,7 +74,8 @@ func _run_test() -> void:
 			quit(20)
 			return
 		var chapter_data := Chapters.get_chapter(chapter_index)
-		var landmark_root := game.get("arena").get_node_or_null("ArenaLandmarks_" + str(chapter_data.arena))
+		var arena_node: Node3D = game.get("arena") as Node3D
+		var landmark_root: Node = arena_node.get_node_or_null("ArenaLandmarks_" + str(chapter_data.arena))
 		if landmark_root == null or landmark_root.get_child_count() == 0:
 			push_error("SMOKE_FAIL: chapter %d arena landmark set is missing" % (chapter_index+1))
 			quit(27)
