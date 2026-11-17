@@ -85,6 +85,35 @@ jobs:
           mkdir -p GodotProject/build
           "$GODOT_BIN" --headless --path GodotProject --export-debug "Android" build/KAVEH-RISING-debug.apk
 
+      - name: Verify APK package, payload and Android launch entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="GodotProject/build/KAVEH-RISING-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          test -s "$APK"
+          test "$(stat -c%s "$APK")" -gt 10000000
+          unzip -t "$APK" >/dev/null
+          CONTENTS="$(unzip -Z1 "$APK")"
+          grep -q '^assets/main.pck
+        with:
+          name: KAVEH-RISING-Android-debug
+          path: GodotProject/build/KAVEH-RISING-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+ <<< "$CONTENTS"
+          grep -q '^lib/arm64-v8a/libgodot_android.so
+        with:
+          name: KAVEH-RISING-Android-debug
+          path: GodotProject/build/KAVEH-RISING-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+ <<< "$CONTENTS"
+          BADGING="$("$AAPT" dump badging "$APK")"
+          grep -q "package: name='org.kavehrising.game'" <<< "$BADGING"
+          grep -q '^launchable-activity:' <<< "$BADGING"
+          echo "APK verified: $(stat -c%s "$APK") bytes; package org.kavehrising.game; arm64-v8a; game payload and launcher entry present."
+
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
