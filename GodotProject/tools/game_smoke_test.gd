@@ -46,6 +46,24 @@ func _run_test() -> void:
 		push_error("SMOKE_FAIL: rigged enemy was not created")
 		quit(7)
 		return
+	# Enemy attacks now have a readable windup; moving/dodging during it avoids damage.
+	first_enemy.global_position = hero.global_position + Vector3(0,0,1.2)
+	first_enemy.set_meta("cooldown",0.01)
+	first_enemy.set_meta("attack_windup",0.0)
+	game.set("invulnerable",0.0)
+	var health_before_telegraph := float(game.get("health"))
+	game.call("_update_enemies",0.02)
+	if float(first_enemy.get_meta("attack_windup",0.0)) <= 0.0 or float(game.get("health")) != health_before_telegraph:
+		push_error("SMOKE_FAIL: enemy attack did not telegraph before dealing damage")
+		quit(28)
+		return
+	first_enemy.set_meta("attack_windup",0.01)
+	game.call("_update_enemies",0.02)
+	if float(game.get("health")) >= health_before_telegraph:
+		push_error("SMOKE_FAIL: enemy attack did not resolve after its windup")
+		quit(29)
+		return
+	game.set("invulnerable",0.0)
 	var sounds: Dictionary = game.get("sfx_streams")
 	if not sounds.has("swing") or sounds["swing"] == null:
 		push_error("SMOKE_FAIL: weapon sound effect did not import")
