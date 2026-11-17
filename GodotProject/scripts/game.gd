@@ -777,11 +777,13 @@ func _spawn_wave() -> void:
 	var data: Dictionary = Chapters.get_chapter(chapter)
 	var count := int(data.count) + (1 if wave > 1 else 0)
 	if chapter == 9:
-		count = 1
+		# The finale is a real two-part encounter: break the dark guard first,
+		# then face Zahhak alone. The campaign remains exactly seventeen waves.
+		count = 1 if wave >= int(data.waves) else 3
 	for i in range(count):
 		var kind := str(data.enemy)
 		if chapter == 9:
-			kind = "boss"
+			kind = "boss" if wave >= int(data.waves) else ("elite" if i == count-1 else "guard")
 		elif wave > 1 and i == count-1:
 			kind = "elite"
 		var angle := TAU * float(i) / float(maxi(1,count))
