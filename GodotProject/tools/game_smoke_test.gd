@@ -73,6 +73,12 @@ func _run_test() -> void:
 			push_error("SMOKE_FAIL: chapter %d did not spawn combat encounters" % (chapter_index+1))
 			quit(20)
 			return
+		var chapter_data := Chapters.get_chapter(chapter_index)
+		var landmark_root := game.get("arena").get_node_or_null("ArenaLandmarks_" + str(chapter_data.arena))
+		if landmark_root == null or landmark_root.get_child_count() == 0:
+			push_error("SMOKE_FAIL: chapter %d arena landmark set is missing" % (chapter_index+1))
+			quit(27)
+			return
 	game.call("_begin_chapter",3)
 	await process_frame
 	var targets: Array = game.get("rescue_targets")
