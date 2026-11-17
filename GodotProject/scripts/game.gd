@@ -469,10 +469,63 @@ func _make_player() -> void:
 func _make_humanoid(body: CharacterBody3D, hero: bool, tunic: Color, armor: Color, size: float) -> void:
 	if hero:
 		_make_kaveh_visual(body, size)
-		return
-	if _attach_rigged_model(body, false, size):
-		return
-	_make_generic_guard(body, tunic, armor, size)
+	else:
+		_make_persian_guard(body, tunic, armor, size)
+
+func _make_persian_guard(body: CharacterBody3D, tunic: Color, armor: Color, size: float) -> void:
+	# Human enemy silhouettes with Persian-inspired cloth, scale armour and weapons.
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	visual.scale = Vector3.ONE * size
+	body.add_child(visual)
+	var skin := _mat(Color(0.55,0.34,0.23))
+	var cloth := _mat(tunic)
+	var metal := _mat(armor)
+	var dark := _mat(Color(0.075,0.065,0.06))
+	var gold := _mat(Color(0.65,0.43,0.16))
+	_add_capsule_part(visual,"GuardBody",Vector3(0,1.08,0),0.41,1.08,cloth)
+	_add_sphere_part(visual,"GuardFace",Vector3(0,1.88,-0.02),Vector3(0.46,0.56,0.40),skin)
+	_add_sphere_part(visual,"GuardHelmet",Vector3(0,2.08,0.02),Vector3(0.54,0.38,0.48),metal)
+	_add_sphere_part(visual,"HelmetCrest",Vector3(0,2.30,0.0),Vector3(0.12,0.26,0.16),gold)
+	for side in [-1,1]:
+		_add_sphere_part(visual,"GuardEye"+str(side),Vector3(float(side)*0.10,1.92,-0.205),Vector3(0.05,0.04,0.03),dark)
+		_add_sphere_part(visual,"GuardCheek"+str(side),Vector3(float(side)*0.18,1.79,-0.16),Vector3(0.12,0.10,0.07),skin)
+		var plate := _box(visual,Vector3(float(side)*0.15,1.25,-0.31),Vector3(0.25,0.58,0.10),armor)
+		plate.rotation.z = float(side)*-0.06
+		for row in range(3):
+			_box(visual,Vector3(float(side)*0.15,1.12+float(row)*0.17,-0.375),Vector3(0.22,0.055,0.035),Color(0.66,0.48,0.23))
+	_add_capsule_part(visual,"GuardScarf",Vector3(0,1.61,-0.04),0.23,0.24,cloth)
+	_box(visual,Vector3(0,0.78,-0.01),Vector3(0.78,0.12,0.46),Color(0.12,0.075,0.05))
+	_box(visual,Vector3(0,0.78,-0.25),Vector3(0.15,0.14,0.06),Color(0.76,0.56,0.22))
+	for side in [-1,1]:
+		var arm := Node3D.new()
+		arm.name = "arm"+str(side)
+		arm.position = Vector3(float(side)*0.49,1.40,0)
+		visual.add_child(arm)
+		_add_capsule_part(arm,"GuardArm",Vector3(0,-0.30,0),0.15,0.70,cloth)
+		_add_capsule_part(arm,"GuardBracer",Vector3(0,-0.58,-0.015),0.14,0.28,metal)
+		var leg := Node3D.new()
+		leg.name = "leg"+str(side)
+		leg.position = Vector3(float(side)*0.22,0.67,0)
+		visual.add_child(leg)
+		_add_capsule_part(leg,"GuardLeg",Vector3(0,-0.30,0),0.18,0.74,dark)
+	# A visible short sword and round shield distinguish the royal guard from Kaveh.
+	var sword := Node3D.new()
+	sword.name = "GuardSword"
+	sword.position = Vector3(0.58,0.88,-0.12)
+	sword.rotation.z = -0.24
+	visual.add_child(sword)
+	_add_capsule_part(sword,"SwordGrip",Vector3(0,0.0,0),0.045,0.28,dark)
+	var blade := MeshInstance3D.new()
+	var blade_mesh := BoxMesh.new()
+	blade_mesh.size = Vector3(0.095,0.76,0.045)
+	blade.mesh = blade_mesh
+	blade.position = Vector3(0,0.47,0)
+	blade.material_override = _mat(Color(0.64,0.68,0.70))
+	sword.add_child(blade)
+	var shield := _add_sphere_part(visual,"GuardShield",Vector3(-0.57,1.08,-0.28),Vector3(0.48,0.62,0.16),metal)
+	shield.rotation.z = -0.08
+	_add_sphere_part(visual,"ShieldBoss",Vector3(-0.57,1.08,-0.39),Vector3(0.16,0.18,0.08),gold)
 
 func _add_capsule_part(parent: Node3D, part_name: String, pos: Vector3, radius: float, height: float, material: Material) -> MeshInstance3D:
 	var part := MeshInstance3D.new()
